@@ -21,7 +21,7 @@ resource "kubectl_manifest" "local_path" {
   force_conflicts   = true
 
   depends_on = [
-    helm_release.external_secrets,
+    helm_release.cilium,
   ]
 }
 
