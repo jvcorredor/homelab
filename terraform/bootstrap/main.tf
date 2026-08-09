@@ -1,7 +1,7 @@
 # terraform/bootstrap is split by component for readability. Each step in
 # the bootstrap order documented in README.md lives in its own file:
 #
-#   gateway-api-crds.tf  — step 1: Gateway API CRDs (standard channel)
+#   gateway-api-crds.tf  — step 1: Gateway API CRDs (experimental channel)
 #   cilium.tf            — step 2: Cilium CNI + LB pool + L2 announcements
 #   local-path.tf        — step 3: local-path-provisioner (default StorageClass)
 #   metrics-server.tf    — step 4: metrics-server (kubectl top)

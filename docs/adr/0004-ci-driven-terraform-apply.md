@@ -1,6 +1,6 @@
 # ADR-0004: CI-driven `terraform/gcp/` apply, env-gated and WIF-scoped
 
-- **Status:** Accepted (amended 2026-05-13 — generalised pattern to `terraform/cloudflare/`)
+- **Status:** Accepted (amended 2026-05-13 — generalised pattern to `terraform/cloudflare/`; that root was removed in the 2026-08-09 barebones reset, ADR-0009 — only the `gcp` root keeps CI apply)
 - **Date:** 2026-05-10
 
 ## Context

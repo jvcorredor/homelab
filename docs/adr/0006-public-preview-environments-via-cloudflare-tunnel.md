@@ -1,6 +1,6 @@
 # ADR-0006: Public preview environments via Cloudflare Tunnel
 
-- **Status:** Accepted; amended 2026-05-12 (see [Amendment](#amendment-2026-05-12-records-in-apex-zone-not-a-delegated-subzone)), 2026-05-13 (see [Amendment](#amendment-2026-05-13-cost-10mo-for-wildcard-cert)), and 2026-05-13 (see [Amendment](#amendment-2026-05-13-lan-unreachability-via-l2-announce-opt-out-not-cilium-upgrade))
+- **Status:** Superseded by ADR-0009 (2026-08-09 barebones reset: tunnel, `projects` Gateway, ACM cert pack, preview wrappers, and all Cloudflare resources destroyed). Original amendments: 2026-05-12, 2026-05-13 ×2.
 - **Date:** 2026-05-11
 
 ## Context

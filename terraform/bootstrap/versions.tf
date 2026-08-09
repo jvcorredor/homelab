@@ -15,8 +15,7 @@ terraform {
       version = "~> 2.16"
     }
     # gavinbunney/kubectl handles raw manifests whose CRDs are created in the
-    # same apply (Cilium L2 policies, cert-manager Certificate, ESO
-    # ClusterSecretStore, ArgoCD Applications). hashicorp/kubernetes_manifest
+    # same apply (Cilium L2 policies, Gateway API CRDs). hashicorp/kubernetes_manifest
     # cannot — it requires the CRD at plan time.
     kubectl = {
       source  = "gavinbunney/kubectl"

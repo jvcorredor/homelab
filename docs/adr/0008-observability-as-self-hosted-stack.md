@@ -1,8 +1,10 @@
-# ADR-0007: Observability as a self-hosted Prometheus + Loki + Alloy stack
+# ADR-0008: Observability as a self-hosted Prometheus + Loki + Alloy stack
+
+(Renumbered from ADR-0007 on 2026-08-09 — it collided with the ESO cluster-WIF ADR.)
 
 ## Status
 
-Accepted (2026-05-14).
+Superseded by ADR-0009 (2026-08-09 barebones reset: Prometheus, Loki, Alloy, and Alertmanager all removed).
 
 ## Context
 
