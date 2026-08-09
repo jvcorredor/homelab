@@ -10,24 +10,6 @@ variable "kube_context" {
   default     = ""
 }
 
-variable "lab_dns_name" {
-  description = "FQDN of the lab subzone served by Cloud DNS. Must match terraform/gcp's value."
-  type        = string
-  default     = "lab.jackhall.dev"
-}
-
-variable "letsencrypt_email" {
-  description = "Contact email registered with Let's Encrypt for issuance + expiry notices. The default is the homelab operator; override in terraform.tfvars if a different mailbox should receive expiry warnings."
-  type        = string
-  default     = "jackvincenthall@gmail.com"
-}
-
-variable "letsencrypt_server" {
-  description = "Let's Encrypt ACME directory URL. Defaults to production; override with the staging URL for first-run smoke tests."
-  type        = string
-  default     = "https://acme-v02.api.letsencrypt.org/directory"
-}
-
 variable "lb_pool_start" {
   description = "First IP in the CiliumLoadBalancerIPPool range. Sits above the Optimum DHCP scope and the static cluster range."
   type        = string
@@ -46,18 +28,6 @@ variable "control_plane_node_selector" {
   default     = "node-role.kubernetes.io/control-plane"
 }
 
-variable "argocd_repo_url" {
-  description = "Git repository ArgoCD reads bootstrap manifests from (the root app-of-apps and the self-managed argocd Application). SSH form is used so ArgoCD always authenticates via the deploy key — synced from GSM by ESO into a labelled `repository` Secret in the argocd namespace, identical to every other ESO-from-GSM credential in this bootstrap — keeping the credential path exercised end-to-end."
-  type        = string
-  default     = "git@github.com:RaptGroup/homelab.git"
-}
-
-variable "argocd_target_revision" {
-  description = "Git revision (branch, tag, or commit) ArgoCD tracks for bootstrap and app-of-apps Applications."
-  type        = string
-  default     = "main"
-}
-
 # --- Chart / manifest version pins ----------------------------------------
 
 variable "gateway_api_version" {
@@ -72,22 +42,10 @@ variable "cilium_chart_version" {
   default     = "1.19.4"
 }
 
-variable "cert_manager_chart_version" {
-  description = "cert-manager Helm chart version."
+variable "metrics_server_chart_version" {
+  description = "metrics-server Helm chart version."
   type        = string
-  default     = "v1.16.2"
-}
-
-variable "external_secrets_chart_version" {
-  description = "external-secrets Helm chart version. v2.x is required for the cluster→AR pull path: ESO's workloadIdentityFederation reader on v1.3.2 returned the federated principal's access token directly, while v2.x reads the `iam.gke.io/gcp-service-account` annotation on the SA and impersonates that GCP SA after the STS exchange (#168). v1.0.0 stopped serving external-secrets.io/v1beta1, so every ESO resource in this repo lives at external-secrets.io/v1 — schema unchanged, apiVersion only."
-  type        = string
-  default     = "2.4.1"
-}
-
-variable "argocd_chart_version" {
-  description = "argo-cd Helm chart version (Argo Helm chart, not the Argo CD app version it ships)."
-  type        = string
-  default     = "9.5.13"
+  default     = "3.13.0"
 }
 
 variable "local_path_version" {
