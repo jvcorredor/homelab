@@ -1,6 +1,6 @@
 # ADR-0003: Public domain, DNS-01 wildcard, split-horizon resolution
 
-- **Status:** Accepted; amended 2026-05-12 (see [Amendment](#amendment-2026-05-12-apex-on-cloudflare))
+- **Status:** Superseded by ADR-0009 (2026-08-09 barebones reset: cert-manager, the Cloud DNS zone, and AdGuard split-horizon all removed; `jackhall.dev` DNS left to lapse)
 - **Date:** 2026-05-10
 
 ## Context

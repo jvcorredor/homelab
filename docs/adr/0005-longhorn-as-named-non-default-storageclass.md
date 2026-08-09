@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Superseded by ADR-0009 (2026-08-09 barebones reset: Longhorn removed; cluster back to Phase-1 local-path only).
 
 ## Context
 

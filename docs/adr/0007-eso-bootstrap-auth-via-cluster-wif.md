@@ -1,6 +1,6 @@
 # ADR-0007: ESO bootstrap GCP auth via cluster Workload Identity Federation
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0009 (2026-08-09 barebones reset: ESO and the cluster WIF pool removed)
 - **Date:** 2026-05-14
 
 ## Context

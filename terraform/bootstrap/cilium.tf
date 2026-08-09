@@ -176,14 +176,12 @@ resource "kubectl_manifest" "cilium_lb_pool" {
 # Services carrying `homelab.jackhall.dev/l2-announce: "false"` opt out of
 # L2 announcement. Cilium still allocates an LB-pool IP for them, but no
 # worker ARP-answers for it on the LAN — the IP is unreachable from any
-# LAN device by construction. The opt-out is currently used by the
-# `projects` Gateway's auto-generated Service (ADR-0006, #142) so the
-# preview-env surface stays a Cloudflare-Tunnel-only path. Gateway API
-# v1's `spec.infrastructure.labels` is what propagates the label from
-# the Gateway resource onto the generated Service.
+# LAN device by construction. (Introduced for the removed preview-env
+# Gateway, ADR-0006; the mechanism stays as the way to park an LB IP off
+# the LAN. Gateway API v1's `spec.infrastructure.labels` is what
+# propagates the label from a Gateway resource onto its generated Service.)
 #
-# `NotIn ["false"]` matches services without the label at all
-# (existing AdGuard, the lab Gateway, future LB Services) AND services
+# `NotIn ["false"]` matches services without the label at all AND services
 # whose label value isn't "false". The standard k8s LabelSelector
 # semantics for NotIn cover the absent-key case (apimachinery
 # pkg/labels/selector.go: `if !ls.Has(r.key) { return true }`).

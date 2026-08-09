@@ -1,6 +1,6 @@
 # ADR-0001: IaC strategy — thin Terraform plus ArgoCD app-of-apps
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-08-09 — the ArgoCD app-of-apps layer was backed out in the barebones reset (see ADR-0009). The Terraform-per-root structure survives; everything above the bootstrap floor is now hand-applied.
 - **Date:** 2026-05-10
 
 ## Context
