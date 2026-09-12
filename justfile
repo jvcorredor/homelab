@@ -30,3 +30,7 @@ smoke-cilium:
         pod-security.kubernetes.io/audit=privileged
     done
     cilium connectivity test --test '!no-unexpected-packet-drops' --test '!check-log-errors'
+
+# Check that relative links in the live docs (ARCHITECTURE.md, CONTEXT.md) resolve
+check-docs:
+    scripts/check-docs.sh

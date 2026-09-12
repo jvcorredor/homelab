@@ -36,10 +36,9 @@ bounded.
 
 ## Cluster contents (the floor)
 
-Talos + Kubernetes + Cilium + Gateway API CRDs + local-path-provisioner +
-metrics-server. Installed by `terraform/bootstrap/`; nothing else is
-managed. Anything above this floor is added by hand and understood by hand
-(ADR-0009).
+The terms below name what runs on the cluster. For what is live, where
+each piece is configured, and what was removed, see
+[`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ### Cilium (unified networking layer)
 
@@ -47,19 +46,20 @@ A single Helm release covering four roles: CNI, kube-proxy replacement,
 LB IPAM + L2 announcements, and Gateway API. The only thing that touches
 the data plane. See ADR-0002.
 
-### LB pool (`192.168.1.200`–`192.168.1.230`)
+### LB pool
 
 The range Cilium hands out to `Service`s of type `LoadBalancer` via
-`CiliumLoadBalancerIPPool`. No pins are currently load-bearing; the
-pre-2026-08 allocations (`.200` AdGuard, `.201` lab Gateway) are gone.
+`CiliumLoadBalancerIPPool`, pinned in
+[`terraform/bootstrap/variables.tf`](./terraform/bootstrap/variables.tf).
+It sits above the Optimum DHCP scope and below the static cluster range.
+No pins are currently load-bearing; the pre-2026-08 allocations (AdGuard,
+the lab Gateway) are gone.
 
-### Static cluster range (`192.168.1.240`–`192.168.1.247`)
+### Static cluster range
 
-- `.240` — control-plane VIP (shared by `cp-01`/`cp-02`/`cp-03`).
-- `.241`/`.242`/`.243` — workers.
-- `.245`/`.246`/`.247` — control planes.
-
-Static, set in the per-node Talos patches under `talos/patches/nodes/`.
+The static addresses for the six nodes and the shared control-plane VIP,
+set per node under [`talos/patches/nodes/`](./talos/patches/nodes/). The
+inventory table lives in [`talos/README.md`](./talos/README.md).
 
 ### Optimum DHCP scope (`192.168.1.11`–`192.168.1.199`)
 
@@ -75,29 +75,11 @@ superseded by ADR-0009. The workers still carry an unused ~1.8 TiB XFS
 partition from that era — reclaiming it needs an EPHEMERAL wipe and is
 deferred.)
 
-## Repository conventions
+## Repository documentation
 
-### IaC split
+### Architecture map
 
-Two Terraform roots, each applied with `tofu` against the GCS backend:
-
-- `terraform/gcp/` — the project skeleton (project, tfstate bucket,
-  `talos-cluster-secrets` GSM container, CI plan/apply SAs + GitHub OIDC
-  WIF pool). Applied by CI on merge to `main` (ADR-0004), environment
-  `gcp` with required-reviewer approval.
-- `terraform/bootstrap/` — the cluster floor (Gateway API CRDs → Cilium →
-  local-path → metrics-server). Applied locally from the operator's
-  workstation; no CI apply for this root.
-
-There is no app-management layer. Workloads above the floor are applied
-by hand (`kubectl`/`helm`) — that is the point of the reset.
-
-## CI/CD
-
-- `terraform-plan.yml` — PR-time plan for the `gcp` root, via the
-  plan-only `tf-ci-plan` SA (roles/viewer).
-- `terraform-apply.yml` — merge-time apply for the `gcp` root, via the
-  env-scoped `tf-ci-apply` SA (roles/owner, impersonable only from jobs
-  declaring `environment: gcp`; the environment carries a required
-  reviewer). See ADR-0004.
-- `secrets-scan.yml` — gitleaks on PRs.
+[`ARCHITECTURE.md`](./ARCHITECTURE.md) — the entry point to the live
+system: what is running, where each piece is configured, how changes
+reach the cluster, what a human must do by hand, and how to verify. It
+states structure, never values; values live in the file that owns them.
