@@ -13,7 +13,7 @@ Owns, in one `tofu apply`:
   The value is uploaded out of band via `gcloud secrets versions add`;
   see `talos/README.md`.
 - The **CI credentials**: the `github-actions` WIF pool + `github`
-  provider (locked to `RaptGroup/homelab`), the plan-only `tf-ci-plan`
+  provider (locked to `jvcorredor/homelab`), the plan-only `tf-ci-plan`
   service account (roles/viewer + securityReviewer), and the `tf-ci-apply`
   service account (roles/owner, impersonable only from a workflow job
   declaring `environment: gcp` — ADR-0004).
