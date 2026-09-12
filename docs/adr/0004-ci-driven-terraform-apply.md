@@ -65,8 +65,8 @@ Concretely:
    binding on `tf-ci-apply` keys on
    `principalSet://…/attribute.environment/gcp`. Combined with the
    provider's existing `attribute_condition` (which pins `repository`
-   to `RaptGroup/homelab`), this is equivalent to the
-   `repo:RaptGroup/homelab:environment:gcp` selector GitHub documents
+   to `jvcorredor/homelab`), this is equivalent to the
+   `repo:jvcorredor/homelab:environment:gcp` selector GitHub documents
    for env-scoped OIDC.
 3. **GitHub environment `gcp`.** Created manually in the UI with:
    - Deployment branch restriction = `main`.
