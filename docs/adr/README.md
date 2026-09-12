@@ -6,6 +6,20 @@ what was rejected, and why — so a future maintainer (or future-me) can
 pick up the thread without re-deriving the reasoning from chat logs and
 commit messages.
 
+## Index
+
+| # | Decision | Status |
+|---|----------|--------|
+| [0001](./0001-iac-strategy.md) | IaC strategy — thin Terraform plus ArgoCD app-of-apps | Accepted; the ArgoCD layer was removed by [0009](./0009-barebones-reset.md), the Terraform roots survive |
+| [0002](./0002-cilium-unified-networking.md) | Cilium as the unified networking layer | Accepted — in force |
+| [0003](./0003-public-domain-dns-tls-split-horizon.md) | Public-domain DNS and TLS, split-horizon | Superseded by [0009](./0009-barebones-reset.md) |
+| [0004](./0004-ci-driven-terraform-apply.md) | CI-driven `terraform/gcp/` apply, env-gated and WIF-scoped | Accepted — in force (the `cloudflare` amendment is obsolete) |
+| [0005](./0005-longhorn-as-named-non-default-storageclass.md) | Longhorn as a named non-default StorageClass | Superseded by [0009](./0009-barebones-reset.md) |
+| [0006](./0006-public-preview-environments-via-cloudflare-tunnel.md) | Public preview environments via Cloudflare Tunnel | Superseded by [0009](./0009-barebones-reset.md) |
+| [0007](./0007-eso-bootstrap-auth-via-cluster-wif.md) | External Secrets bootstrap auth via cluster WIF | Superseded by [0009](./0009-barebones-reset.md) |
+| [0008](./0008-observability-as-self-hosted-stack.md) | Observability as a self-hosted stack | Superseded by [0009](./0009-barebones-reset.md) |
+| [0009](./0009-barebones-reset.md) | Barebones reset — back out everything above Talos + Cilium | Accepted — current frame |
+
 ## Format
 
 Each ADR is a single Markdown file named `NNNN-short-kebab-title.md`,
