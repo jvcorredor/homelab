@@ -34,7 +34,7 @@ prerequisite for passthrough is met ([below](#what-is-deferred)).
 | Uplink | onboard Realtek RTL8125 2.5GbE (`nic0`); Wi-Fi is down and unused |
 
 - **SSH** — `ssh root@192.168.1.248`, key-based. The workstation's key
-  is authorized; there is no password login.
+  is authorized.
 - **Web UI** — the Proxmox interface on port `8006`. The host maps
   `pve.home.arpa` to itself, but a workstation resolver usually does not
   know the `.home.arpa` zone, so `https://192.168.1.248:8006` is the
@@ -54,10 +54,11 @@ the bare machine, EFI-booted, with the `pve-no-subscription` repository
 (`/etc/apt/sources.list.d/pve-no-subscription.sources`, Trixie). Two
 things from the install are worth remembering:
 
-- The installer pinned the onboard NICs to their names by MAC under
-  `/usr/local/lib/systemd/network/` (`50-pmx-nic0.link`,
-  `50-pmx-nic1.link`), so `nic0` and `nic1` keep their identity across
-  kernel updates and device-order changes.
+- The installer pinned the onboard NIC to `nic0` by MAC under
+  `/usr/local/lib/systemd/network/` (`50-pmx-nic0.link`), so it keeps
+  its identity across kernel updates and device-order changes. An
+  additional `nic1` pin targets the Wi-Fi adapter's MAC but is inert —
+  `Type=ether` never matches it — so Wi-Fi stays `wlp4s0` and unused.
 - The disk was left on the single-disk default layout — no ZFS, no
   RAID — so the storage below is the whole story.
 
