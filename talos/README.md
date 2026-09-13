@@ -28,13 +28,51 @@ Machine configuration for the `rockingham` Talos cluster.
   - `worker-02` — `192.168.1.242`
   - `worker-03` — `192.168.1.243`
 
-Every node runs the stock installer (`ghcr.io/siderolabs/installer:v1.13.0`).
-The factory schematic with iscsi/util-linux extensions was removed in the
-2026-08 reset (it existed only for Longhorn; ADR-0005, superseded by
-ADR-0009). Workers cap `EPHEMERAL` at 200 GiB — a leftover from carving
-the disk for Longhorn. The ~1.8 TiB XFS partition that era created still
-sits on each worker's disk unused; reclaiming it means wiping EPHEMERAL
-(XFS can't shrink), deferred until a storage layer is rebuilt.
+Every node runs Talos v1.14.0. Workers use a factory image carrying the
+`iscsi-tools` and `util-linux-tools` system extensions — the Longhorn
+prerequisites, so a future reinstall needs no reimage (see "Installer
+images" below). They were dropped in the 2026-08 reset (ADR-0009) and
+return ahead of that rebuild. Workers cap `EPHEMERAL` at 200 GiB — a
+leftover from carving the disk for Longhorn. The ~1.8 TiB XFS partition
+that era created still sits on each worker's disk unused; reclaiming it
+means wiping EPHEMERAL (XFS can't shrink), deferred until a storage layer
+is rebuilt.
+
+## Installer images (Image Factory)
+
+From 1.14, `ghcr.io/siderolabs/installer` is no longer published;
+installer images come from the [Image Factory](https://factory.talos.dev).
+Workers use a schematic carrying the Longhorn prerequisites:
+
+- `siderolabs/iscsi-tools`
+- `siderolabs/util-linux-tools`
+
+Schematic ID:
+`613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245`
+(the SHA-256 of the schematic YAML, so re-uploading the same file returns
+the same ID). To regenerate it or change the extension set:
+
+```sh
+cat <<'EOF' > /tmp/schematic.yaml
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/iscsi-tools
+      - siderolabs/util-linux-tools
+EOF
+
+curl -X POST --data-binary @/tmp/schematic.yaml https://factory.talos.dev/schematics
+```
+
+- Workers:
+  `factory.talos.dev/metal-installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245:<version>`
+- Control planes:
+  `factory.talos.dev/metal-installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:<version>`
+  (the empty schematic), except `1.13.x` where stock
+  `ghcr.io/siderolabs/installer:<version>` is still published.
+
+Both schematics stay valid across Talos versions, so an upgrade only
+changes the `:<version>` tag.
 
 ## First-time generation
 
@@ -109,15 +147,67 @@ apply-config steps. Workers use `worker.yaml` as the base instead of
 
 ## Upgrading Talos / changing machine config
 
-Nodes run the stock installer, so upgrades are plain:
+An upgrade is per node: `talosctl upgrade` hands the node an installer
+image and the node cordons and drains itself, swaps the OS image, and
+reboots (`--wait` and `--drain` default to on). The A-B boot scheme keeps
+the previous kernel/OS entry, so a failed boot rolls back automatically,
+and `talosctl rollback` reverts a successful one.
 
-```sh
-talosctl --nodes <ip> upgrade --image ghcr.io/siderolabs/installer:<new-version>
-```
+Installer images for both roles are in "Installer images" above — workers
+take every hop on the extension schematic, control planes on ghcr for
+`1.13.x` and the empty factory schematic from `1.14.x`.
 
-Note (observed on v1.13.0, 2026-08): an upgrade to the *same* version stages
-the new boot entry but does not reboot the node — follow up with an explicit
-`talosctl --nodes <ip> reboot`. Cordon and drain first for workers.
+Take the latest patch of each intermediate minor before crossing a minor:
+`v1.13.0 -> v1.13.10 -> v1.14.0`.
+
+1. Before the first node, snapshot etcd from a control plane (the file is
+   gitignored, so it stays out of the repo):
+
+   ```sh
+   talosctl --nodes 192.168.1.245 etcd snapshot talos/_out/etcd-<date>.snapshot
+   ```
+
+2. Roll one node at a time, checking health between nodes: a worker canary
+   first, then the control planes one at a time (Talos refuses a control
+   plane upgrade that would break etcd quorum; roll them one at a time
+   anyway), then the remaining workers.
+
+   ```sh
+   # control planes: v1.13.0 -> v1.13.10 (ghcr image; still published for 1.13.x)
+   talosctl --nodes <cp-ip> upgrade --image ghcr.io/siderolabs/installer:v1.13.10
+
+   # workers: v1.13.0 -> v1.13.10 on the extension schematic
+   talosctl --nodes <ip> upgrade \
+     --image factory.talos.dev/metal-installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245:v1.13.10
+
+   # control planes: v1.13.10 -> v1.14.0 (empty schematic; ghcr stops at 1.13.x)
+   talosctl --nodes <cp-ip> upgrade \
+     --image factory.talos.dev/metal-installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.0
+
+   # workers: v1.13.10 -> v1.14.0 (extension schematic)
+   talosctl --nodes <ip> upgrade \
+     --image factory.talos.dev/metal-installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245:v1.14.0
+   ```
+
+3. After each node, `talosctl --nodes <ip> version` shows the new version
+   and `kubectl get nodes` shows it `Ready`; for control planes also check
+   `talosctl --nodes <ip> etcd status`. On a worker,
+   `talosctl --nodes <ip> get extensions` should list `iscsi-tools` and
+   `util-linux-tools`.
+
+The worker patches pin the installer image for installs
+(`patches/nodes/worker-0*.yaml`), so bump them alongside a cluster upgrade
+and a rebuilt node comes back on the cluster's version. Control planes
+inherit the image from the generated `_out/controlplane.yaml`; regenerate
+with a `talosctl` matching the target version.
+
+Note (observed on v1.13.0, 2026-08): an upgrade to the *same* version
+stages the new boot entry but does not reboot the node — follow up with an
+explicit `talosctl --nodes <ip> reboot`.
+
+Kubernetes is not upgraded by an OS upgrade; `talosctl upgrade-k8s` is a
+separate operation, and the cluster's Cilium/k8s support gap
+(`terraform/bootstrap/variables.tf`) should be read before running it.
 
 ## Backing up `secrets.yaml`
 
