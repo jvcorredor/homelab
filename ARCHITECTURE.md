@@ -7,7 +7,8 @@ This document states **structure, never values**. Addresses, ranges,
 versions, chart pins, and node inventories live in the file that owns them
 and are reached by link. Vocabulary lives in [`CONTEXT.md`](./CONTEXT.md),
 decisions and their history in [`docs/adr/`](./docs/adr/README.md), and
-procedures in the per-root READMEs.
+procedures in the per-root READMEs. A rendered copy with C4 diagrams
+lives at <https://jvcorredor.github.io/homelab/>.
 
 ## What is live
 

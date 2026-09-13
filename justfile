@@ -34,3 +34,15 @@ smoke-cilium:
 # Check that relative links in the live docs (ARCHITECTURE.md, CONTEXT.md) resolve
 check-docs:
     scripts/check-docs.sh
+
+# Render the C4 diagrams into docs/src/assets/diagrams (needs Java + Graphviz)
+diagrams:
+    scripts/build-diagrams.sh
+
+# Serve the docs site locally at http://localhost:4321/homelab/ (run `npm ci` in docs/ first)
+docs:
+    npm --prefix docs run dev
+
+# Build the docs site the way CI does (run `just diagrams` first)
+docs-build:
+    npm --prefix docs run build

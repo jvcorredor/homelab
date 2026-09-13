@@ -1,0 +1,64 @@
+---
+title: What is Rockingham?
+description: A six-node bare-metal Talos Kubernetes cluster in a home lab, and how to read this site.
+---
+
+import Diagram from "../../components/Diagram.astro";
+import context from "../../assets/diagrams/01-system-context.svg";
+
+**Rockingham** is a six-node bare-metal Kubernetes cluster in a home lab:
+three control planes and three workers, running Talos Linux. It exists to
+be understood — the operator can explain every layer running on it, and
+anything built on top of it is installed by hand first
+([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)).
+
+<Diagram
+  src={context}
+  alt="System context diagram: the operator operates the cluster, GitHub runs CI and hosts this site, the GCP project holds the cloud-side skeleton, and the cluster sits behind the Optimum gateway alongside public registries."
+  caption="Level 1 — who touches the lab, and what it depends on."
+/>
+
+## What this site is
+
+A reading layer over the repository, not a second source of truth:
+
+- **The repository is canonical.** The live-system map is
+  [`ARCHITECTURE.md`](https://github.com/jvcorredor/homelab/blob/main/ARCHITECTURE.md),
+  vocabulary is
+  [`CONTEXT.md`](https://github.com/jvcorredor/homelab/blob/main/CONTEXT.md),
+  decisions are the
+  [ADR index](https://github.com/jvcorredor/homelab/blob/main/docs/adr/README.md),
+  and every value — addresses, versions, pins — lives in the file that
+  owns it.
+- **This site explains.** It renders the repository's structure as C4
+  diagrams and prose, and links out to the owning file whenever a number
+  matters. The [Architecture map](./reference/architecture-map/) and
+  [Glossary](./reference/glossary/) pages are generated from the repo
+  files at build time, so they cannot drift.
+
+## The floor
+
+Since the 2026-08-09 **barebones reset**, the cluster runs the floor only:
+
+1. **Gateway API CRDs** — applied before Cilium, which needs the kinds at
+   startup.
+2. **Cilium** — the only data-plane component: CNI, kube-proxy
+   replacement, LB IPAM + L2 announcements, Gateway API controller.
+3. **local-path-provisioner** — the default (and only) `StorageClass`.
+4. **metrics-server** — `kubectl top` and the resource-metrics APIs.
+
+Everything above the floor — ArgoCD, cert-manager, External Secrets,
+observability, Longhorn, Harbor, ARC, the Cloudflare preview surface —
+was removed in the reset. Each keeps a superseded ADR, so the history and
+the reasoning survive without the running components.
+
+## Where to go next
+
+- [The floor](./architecture/) — what each module does and how changes
+  reach the cluster.
+- [Network and nodes](./architecture/network/) — the address plan and how
+  a `LoadBalancer` service actually answers on the LAN.
+- [Bring-up](./operations/bring-up/) — from blank disks to the floor,
+  step by step.
+- [Decision records](./decisions/) — why the lab looks like this, and
+  what was rejected along the way.

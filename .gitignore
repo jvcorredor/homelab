@@ -1,5 +1,8 @@
 WORKING.md
 
+# Diagram tooling cache (scripts/build-diagrams.sh)
+.tools/
+
 # Terraform / OpenTofu
 .terraform/
 .terraform.tfstate.lock.info

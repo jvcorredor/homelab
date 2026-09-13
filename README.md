@@ -22,6 +22,9 @@ It owns the structure; values live in their owning files, vocabulary in
 
 ## Documentation
 
+- [Docs site](https://jvcorredor.github.io/homelab/) — the architecture
+  rendered with C4 diagrams; a presentation layer over the files below
+  ([source](./docs/README.md), [ADR-0010](./docs/adr/0010-docs-site-with-c4-diagrams.md)).
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md) — the live-system map; read it
   first.
 - [`CONTEXT.md`](./CONTEXT.md) — the canonical glossary used across this
