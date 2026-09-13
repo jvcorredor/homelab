@@ -18,6 +18,13 @@ control-plane VIP, install configuration) is per-node under
 [`talos/patches/nodes/`](./talos/patches/nodes/), with the inventory
 table in [`talos/README.md`](./talos/README.md).
 
+Outside the cluster, the lab's second compute component is the **utility
+host** — a hand-installed Proxmox VE machine whose durable VMs are
+declared in [`terraform/proxmox/`](./terraform/proxmox/README.md)
+([ADR-0011](./docs/adr/0011-utility-host.md)). Its hardware, access,
+and VM inventory are documented in
+[the utility host page](./docs/src/content/docs/architecture/utility-host.mdx).
+
 As of the 2026-08-09 barebones reset
 ([ADR-0009](./docs/adr/0009-barebones-reset.md)), the cluster runs the
 **floor** only:
