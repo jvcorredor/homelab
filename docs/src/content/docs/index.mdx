@@ -1,15 +1,17 @@
 ---
 title: What is Rockingham?
-description: A six-node bare-metal Talos Kubernetes cluster in a home lab, and how to read this site.
+description: The home lab this repository manages — a six-node bare-metal Talos Kubernetes cluster and a Proxmox utility host — and how to read this site.
 ---
 
 import Diagram from "../../components/Diagram.astro";
 import context from "../../assets/diagrams/01-system-context.svg";
 
-**Rockingham** is a six-node bare-metal Kubernetes cluster in a home lab:
-three control planes and three workers, running Talos Linux. It exists to
-be understood — the operator can explain every layer running on it, and
-anything built on top of it is installed by hand first
+**The Rockingham Homelab** is the home lab this repository manages. It
+has two compute components: a six-node bare-metal Kubernetes cluster
+(`rockingham` — three control planes and three workers, running Talos
+Linux) and a utility host (`pve.home.arpa`, running Proxmox VE). It
+exists to be understood — the operator can explain every layer running
+in it, and anything built on top is installed by hand first
 ([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)).
 
 <Diagram
