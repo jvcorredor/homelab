@@ -4,11 +4,11 @@ Machine configuration for the `rockingham` Talos cluster.
 
 ## Layout
 
-- `patches/cluster/<topic>.yaml` — cluster-level machine config patches
-  applied to every control plane (e.g. kube-apiserver flags). Same
-  content goes onto every CP because Talos's `cluster:` section is
-  cluster-wide. (Currently empty — the OIDC-issuer patch was removed in
-  the 2026-08 barebones reset.)
+- `patches/cluster/<topic>.yaml` — shared machine config patches applied
+  to every node, both control planes and workers, before any per-node
+  patch. Use for node-level documents every node should carry
+  (`filesystem-trim.yaml`); `cluster:`-section fields (e.g. kube-apiserver
+  flags) also live here and simply have no effect on workers.
 - `patches/nodes/<hostname>.yaml` — per-node machine config patches
   (hostname, static address, install disk, VIP membership).
   Version-controlled.
@@ -37,6 +37,15 @@ leftover from carving the disk for Longhorn. The ~1.8 TiB XFS partition
 that era created still sits on each worker's disk unused; reclaiming it
 means wiping EPHEMERAL (XFS can't shrink), deferred until a storage layer
 is rebuilt.
+
+## Filesystem trim
+
+All nodes carry `patches/cluster/filesystem-trim.yaml` — a weekly
+`FilesystemTrimConfig`. Talos only enables trim by default on clusters
+generated with 1.14; `rockingham` was upgraded, so the document is
+explicit here. Trim runs on mounted, trim-capable filesystems; a volume
+with different needs overrides the interval with the `trim` block on its
+volume document.
 
 ## Installer images (Image Factory)
 
@@ -90,15 +99,17 @@ talosctl gen config rockingham https://192.168.1.240:6443 \
   --output-dir talos/_out/
 
 # 3. Produce the per-node config for cp-01 by patching the base controlplane.
-#    Cluster-level patches (if any exist) go first so per-node patches can
-#    still override anything they need to.
+#    Shared cluster patches go first so per-node patches can still override
+#    anything they need to.
 talosctl machineconfig patch talos/_out/controlplane.yaml \
+  --patch @talos/patches/cluster/filesystem-trim.yaml \
   --patch @talos/patches/nodes/cp-01.yaml \
   -o talos/_out/cp-01.yaml
 ```
 
 Repeat step 3 for every node, using `talos/_out/worker.yaml` as the base
-for the workers. Also point the talosconfig at the control planes:
+for the workers; the shared cluster patches apply to both roles. Also
+point the talosconfig at the control planes:
 
 ```sh
 export TALOSCONFIG=$PWD/talos/_out/talosconfig
@@ -200,6 +211,11 @@ The worker patches pin the installer image for installs
 and a rebuilt node comes back on the cluster's version. Control planes
 inherit the image from the generated `_out/controlplane.yaml`; regenerate
 with a `talosctl` matching the target version.
+
+Other machine config changes go through the same patch-and-apply path.
+From 1.14, `talosctl apply-config` no longer reboots by default and most
+documents — `FilesystemTrimConfig` included — take effect live; reboot
+explicitly for changes that need it, and cordon/drain workers first.
 
 Note (observed on v1.13.0, 2026-08): an upgrade to the *same* version
 stages the new boot entry but does not reboot the node — follow up with an
