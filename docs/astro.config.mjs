@@ -36,6 +36,7 @@ export default defineConfig({
             { label: "The floor", slug: "architecture" },
             { label: "Network and nodes", slug: "architecture/network" },
             { label: "Storage", slug: "architecture/storage" },
+            { label: "The utility host", slug: "architecture/utility-host" },
           ],
         },
         {

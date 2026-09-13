@@ -16,7 +16,7 @@ in it, and anything built on top is installed by hand first
 
 <Diagram
   src={context}
-  alt="System context diagram: the operator operates the cluster, GitHub runs CI and hosts this site, the GCP project holds the cloud-side skeleton, and the cluster sits behind the Optimum gateway alongside public registries."
+  alt="System context diagram: the operator operates the Kubernetes cluster and the utility host, GitHub runs CI and hosts this site, the GCP project holds the cloud-side skeleton, and both compute components sit behind the Optimum gateway alongside public registries."
   caption="Level 1 — who touches the lab, and what it depends on."
 />
 
@@ -60,6 +60,8 @@ the reasoning survive without the running components.
   reach the cluster.
 - [Network and nodes](./architecture/network/) — the address plan and how
   a `LoadBalancer` service actually answers on the LAN.
+- [The utility host](./architecture/utility-host/) — the lab's second
+  compute component: a Proxmox VE host for VMs outside the cluster.
 - [Bring-up](./operations/bring-up/) — from blank disks to the floor,
   step by step.
 - [Decision records](./decisions/) — why the lab looks like this, and

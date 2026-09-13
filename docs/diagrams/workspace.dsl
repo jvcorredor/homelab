@@ -2,14 +2,15 @@
 //
 // This file is the single source of truth for the architecture diagrams.
 // Addresses and versions appear in diagram descriptions for readability;
-// the files that own those values are talos/patches/nodes/ and
-// terraform/bootstrap/variables.tf — update this file when they change.
+// the files that own those values are talos/patches/nodes/,
+// terraform/bootstrap/variables.tf, and terraform/proxmox/ — update this
+// file when they change.
 //
 // Views: L1 (system context), L2 (containers), Deployment, Bootstrap,
 // LBTraffic, CICD. View keys determine the exported file names, which
 // scripts/build-diagrams.sh maps onto stable asset names.
 
-workspace "Rockingham Homelab" "The lab's Kubernetes cluster and its dependencies, modelled in C4." {
+workspace "Rockingham Homelab" "The lab's two compute components — the Kubernetes cluster and the utility host — and their dependencies, modelled in C4." {
 
     model {
 
@@ -30,18 +31,23 @@ workspace "Rockingham Homelab" "The lab's Kubernetes cluster and its dependencie
             workloads -> cilium "Services, policies, and ingress through the datapath"
         }
 
+        utility = softwareSystem "Utility host (pve.home.arpa)" "Hand-installed Proxmox VE machine at pve.home.arpa. The lab's second compute component, outside the cluster: durable VMs managed by terraform/proxmox, throwaways by hand (ADR-0011)."
+
         github = softwareSystem "GitHub" "Repository, Actions runners, and GitHub Pages. CI plans and applies the GCP root; the docs site deploys from here." "External"
         gcp = softwareSystem "GCP project rockingham-homelab" "Project skeleton: tfstate bucket, the talos-cluster-secrets GSM container, and the CI plan/apply identities behind GitHub OIDC WIF (ADR-0004)." "External"
         gateway = softwareSystem "Optimum Gateway 6E" "Home router. Hands out DHCP for 192.168.1.11-199 and switches the LAN where the static cluster range and LB pool live." "External"
         internet = softwareSystem "Public registries" "Container image registries and Helm chart sources the cluster pulls from." "External"
 
         operator -> rockingham "Operates with talosctl, kubectl, helm, and tofu"
+        operator -> utility "Operates with SSH and the PVE web UI; applies durable VMs with tofu"
         operator -> github "Pushes, reviews, and approves deployments"
         operator -> gcp "Uploads talos-cluster-secrets versions with gcloud (manual)"
         github -> gcp "Plans and applies terraform/gcp over OIDC Workload Identity Federation"
         github -> operator "Reports CI results"
         rockingham -> gateway "Default route; ARP for LB pool addresses"
         rockingham -> internet "Pulls images and charts"
+        utility -> gateway "Default route on the LAN"
+        utility -> internet "Pulls OS and package updates"
         gateway -> internet "WAN uplink"
 
         operator -> talos "Applies machine config with talosctl"
