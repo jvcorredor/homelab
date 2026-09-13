@@ -24,3 +24,16 @@ kind: VolumeConfig
 name: EPHEMERAL
 provisioning:
   maxSize: 200GiB
+---
+# The Longhorn-era user volume (ADR-0005, superseded by ADR-0009) carved
+# nvme0n1p5 (1.8 TiB XFS, partition label `u-longhorn`) out of this
+# worker's disk. The reset tore down the volume config but left the
+# partition. Re-claim it as an existing volume so Jellyfin's media
+# library has a home; mounts at /var/mnt/media (issue #233). No wipe —
+# the partition is clean XFS and pre-formatted.
+apiVersion: v1alpha1
+kind: ExistingVolumeConfig
+name: media
+discovery:
+  volumeSelector:
+    match: volume.partition_label == "u-longhorn"

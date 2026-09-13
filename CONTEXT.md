@@ -69,8 +69,13 @@ The range Cilium hands out to `Service`s of type `LoadBalancer` via
 `CiliumLoadBalancerIPPool`, pinned in
 [`terraform/bootstrap/variables.tf`](./terraform/bootstrap/variables.tf).
 It sits above the Optimum DHCP scope and below the static cluster range.
-No pins are currently load-bearing; the pre-2026-08 allocations (AdGuard,
-the lab Gateway) are gone.
+Load-bearing pins:
+
+- `.200` — Jellyfin Gateway (`kubernetes/apps/jellyfin/`). First
+  workload above the floor (issue #233); pinned via
+  `lbipam.cilium.io/ips` so the LAN access URL is stable.
+
+The pre-2026-08 allocations (AdGuard, the lab Gateway) are gone.
 
 ### Static cluster range
 
@@ -88,9 +93,20 @@ The Optimum Gateway 6E hands out DHCP leases only in this range, leaving
 `local-path-provisioner` is the default and only `StorageClass`. PVCs bind
 to a directory on whatever node the pod first lands on; volumes are not
 portable. Fine for singletons. (Longhorn came and went: ADR-0005,
-superseded by ADR-0009. The workers still carry an unused ~1.8 TiB XFS
-partition from that era — reclaiming it needs an EPHEMERAL wipe and is
-deferred.)
+superseded by ADR-0009. The workers carry a ~1.8 TiB XFS partition from
+that era, `nvme0n1p5` labeled `u-longhorn`, carved out of each worker's
+disk.)
+
+### `media` (worker-01, `/var/mnt/media`)
+
+Worker-01's `u-longhorn` partition is reclaimed as an
+`ExistingVolumeConfig` named `media` (`talos/patches/nodes/worker-01.yaml`),
+mounted at `/var/mnt/media` and backing the Jellyfin media library
+(issue #233). It is node-bound — the data physically lives on
+worker-01 — so Jellyfin is pinned there via `nodeSelector`. Files are
+placed on the host out-of-band (rsync/copy onto worker-01); the Jellyfin
+pod mounts the path read-only. Worker-02/worker-03's partitions remain
+unused.
 
 ## Repository documentation
 

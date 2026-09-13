@@ -1,0 +1,52 @@
+# Jellyfin Media Server — official jellyfin/jellyfin Helm chart.
+#
+# Pinned to worker-01, whose 1.8 TiB XFS partition (mounts at
+# /var/mnt/media on the host via ExistingVolumeConfig, see
+# talos/patches/nodes/worker-01.yaml) backs the media library. Config
+# lives on a local-path PVC; the media volume is a hostPath mount and
+# read-only to the pod (files are written out-of-band on the host).
+#
+# Access: http://192.168.1.200/ through the Cilium Gateway + the
+# chart-rendered HTTPRoute (issue #233).
+
+# Leave the tag empty to inherit the chart's appVersion
+# (`docker.io/jellyfin/jellyfin:10.11.8` on chart 3.2.0).
+image:
+  repository: docker.io/jellyfin/jellyfin
+  tag: ""
+
+persistence:
+  config:
+    enabled: true
+    type: pvc
+    size: 5Gi
+    accessMode: ReadWriteOnce
+  media:
+    enabled: true
+    type: hostPath
+    hostPath: /var/mnt/media
+    readOnly: true
+  cache:
+    enabled: true
+    type: emptyDir
+
+nodeSelector:
+  kubernetes.io/hostname: worker-01
+
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: jellyfin
+      sectionName: http
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
