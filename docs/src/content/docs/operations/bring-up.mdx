@@ -1,0 +1,86 @@
+---
+title: Bring-up
+description: From blank disks to the floor — Talos machine config, the one-time bootstrap, and the ordered Terraform apply that installs the floor.
+---
+
+import Diagram from "../../../components/Diagram.astro";
+import bootstrap from "../../../assets/diagrams/04-bootstrap.svg";
+
+Bring-up is two phases: **Talos** turns blank disks into a working
+Kubernetes cluster, then **`terraform/bootstrap/`** installs the floor.
+The canonical runbook is
+[`talos/README.md`](https://github.com/jvcorredor/homelab/blob/main/talos/README.md);
+what follows is the shape of it.
+
+<Diagram
+  src={bootstrap}
+  wide
+  alt="Sequence diagram of the bring-up: talosctl applies machine configs and bootstraps the first control plane; then tofu applies Gateway API CRDs, Cilium, local-path-provisioner, and metrics-server in order; finally just smoke verifies connectivity."
+  caption="Bring-up — Talos first, then the four floor modules in order."
+/>
+
+## Phase 1 — Talos
+
+1. **Generate cluster secrets** — `talosctl gen secrets` writes
+   `talos/_out/secrets.yaml`. This file is the only irreplaceable artifact
+   in the lab: it holds the cluster CA key, the etcd bootstrap token, and
+   KMS material. It is uploaded out of band to the
+   `talos-cluster-secrets` GSM container (see below).
+2. **Generate base configs** — `talosctl gen config rockingham` produces
+   `controlplane.yaml`, `worker.yaml`, and `talosconfig`.
+3. **Patch per node** — each node gets its hostname, static address, NIC,
+   and install disk from
+   [`talos/patches/nodes/<hostname>.yaml`](https://github.com/jvcorredor/homelab/tree/main/talos/patches/nodes).
+4. **Apply in maintenance mode** — a freshly booted node sits at a DHCP
+   address in maintenance mode and accepts an insecure config push:
+   `talosctl apply-config --insecure`. The node installs Talos to its
+   disk and reboots.
+5. **Bootstrap once** — after the first control plane reboots,
+   `talosctl bootstrap` against it forms etcd. This runs exactly once for
+   the cluster's lifetime.
+6. **Fetch the kubeconfig** — `talosctl kubeconfig` writes the kubeconfig
+   that everything else uses.
+
+## Phase 2 — the floor
+
+From a workstation with that kubeconfig, apply
+[`terraform/bootstrap/`](https://github.com/jvcorredor/homelab/tree/main/terraform/bootstrap).
+The order is not configurable by accident — `depends_on` enforces it:
+
+1. **Gateway API CRDs** — Cilium's operator needs the kinds at startup.
+2. **Cilium** — brings up the data plane, LB IPAM, and L2 announcements.
+3. **local-path-provisioner** — installs the default `StorageClass`.
+4. **metrics-server** — enables `kubectl top`.
+
+Then verify with `just smoke`, which runs the Cilium connectivity test
+against the current kubeconfig. The test namespaces are pre-created
+`privileged` because the test fixtures need `NET_RAW`, `hostNetwork`, and
+`hostPort` — see the
+[justfile](https://github.com/jvcorredor/homelab/blob/main/justfile).
+
+## The secrets backup
+
+After generating secrets — and after any rotation — upload the new
+version to Google Secret Manager:
+
+```sh
+gcloud secrets versions add talos-cluster-secrets \
+  --project=rockingham-homelab \
+  --data-file=talos/_out/secrets.yaml
+```
+
+Terraform manages the GSM **container** only, deliberately: pulling the
+value through Terraform would land it in the GCS-backed state file too.
+`talosconfig` and `kubeconfig` can both be regenerated from
+`secrets.yaml`, so they do not need the same care.
+
+## Two things only a human can do
+
+- **Fresh GCP account** — enable `serviceusage.googleapis.com` by hand,
+  provide the billing account, and run the first apply without the
+  backend the root is about to create. See the
+  [GCP root README](https://github.com/jvcorredor/homelab/blob/main/terraform/gcp/README.md).
+- **GitHub environment** — create the `gcp` deployment environment with
+  its branch restriction and required reviewer, and set the repository
+  variables/secrets from the root's outputs. That protection is UI state
+  no code holds.

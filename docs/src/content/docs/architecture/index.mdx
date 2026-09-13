@@ -1,0 +1,84 @@
+---
+title: The floor
+description: What runs on Rockingham after the barebones reset, why the modules are ordered the way they are, and how changes reach the cluster.
+---
+
+import Diagram from "../../../components/Diagram.astro";
+import containers from "../../../assets/diagrams/02-containers.svg";
+
+Since the 2026-08-09 barebones reset
+([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)),
+Rockingham runs a deliberately small set of components — the **floor**.
+Everything above it was removed and returns only by hand, one layer at a
+time, as a learning exercise.
+
+<Diagram
+  src={containers}
+  alt="Container diagram: inside Rockingham, Cilium requires Gateway API CRDs at startup and runs as a DaemonSet on Talos; workloads claim volumes from local-path-provisioner and route through Cilium. The Optimum gateway exchanges traffic with Cilium."
+  caption="Level 2 — the floor inside the cluster."
+/>
+
+## The four modules
+
+| # | Module | Role | Why it is here |
+|---|--------|------|----------------|
+| 1 | **Gateway API CRDs** | Cluster-scoped resource definitions | Cilium's operator probes for these kinds at startup; without them it will not register its GatewayClass. |
+| 2 | **Cilium** | CNI, kube-proxy replacement, LB IPAM + L2 announcements, Gateway API controller | One Helm release covers four jobs, so there is exactly one data-plane component to understand ([ADR-0002](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0002-cilium-unified-networking.md)). |
+| 3 | **local-path-provisioner** | Default `StorageClass` | Volumes are node-local and not portable — fine for singletons, and honest about what the lab needs. |
+| 4 | **metrics-server** | Resource metrics API | Backs `kubectl top` and the HPA/VPA metrics APIs. |
+
+The floor is installed by
+[`terraform/bootstrap/`](https://github.com/jvcorredor/homelab/tree/main/terraform/bootstrap),
+applied from a workstation that holds the Talos-issued kubeconfig — there
+is no CI apply for this root, because its providers need the LAN-only
+cluster.
+
+## Why the order is what it is
+
+Bootstrap order is enforced with `depends_on` in
+[`main.tf`](https://github.com/jvcorredor/homelab/blob/main/terraform/bootstrap/main.tf):
+**Gateway API CRDs → Cilium → local-path → metrics-server**.
+
+- Cilium will not come up cleanly without the CRDs, so they land first.
+- local-path and metrics-server assume a working data plane, so they come
+  after Cilium.
+
+The full operating detail, including the upgrade policy, is in the
+[root's README](https://github.com/jvcorredor/homelab/blob/main/terraform/bootstrap/README.md).
+
+## How changes reach the cluster
+
+| Change | Path | Gate |
+|--------|------|------|
+| `terraform/gcp/` | PR plan; merge to `main` triggers apply | `gcp` GitHub environment: branch-restricted, required reviewer ([ADR-0004](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0004-ci-driven-terraform-apply.md)) |
+| `terraform/bootstrap/` | `tofu apply` from a workstation holding the kubeconfig | none — no CI apply for this root |
+| Talos machine config | `talosctl` per node, per the [runbook](https://github.com/jvcorredor/homelab/blob/main/talos/README.md) | none |
+| Anything above the floor | applied by hand (`kubectl`, `helm`) | the admission rule below |
+
+The apply gate is a human approval at run time, not just review at PR
+time: the apply job sits behind the `gcp` deployment environment.
+
+## What only a human can do
+
+Steps with no code path, which no CI check will catch:
+
+- **Fresh GCP account** — enable the APIs by hand, provide the billing
+  account, and perform the first apply without the backend the root is
+  about to create.
+- **Cluster-secrets backup** — after `talosctl gen secrets` and after any
+  rotation, upload a new version to the `talos-cluster-secrets` GSM
+  container.
+- **GitHub environments** — the `gcp` environment's branch restriction,
+  required reviewer, and the repository variables/secrets are UI state
+  that no code holds.
+- **Talos bring-up** — generate secrets and base configs, patch per node,
+  apply in maintenance mode, bootstrap the first control plane once.
+
+## Adding a layer
+
+Pick it by hand, install it by hand, and be able to explain it — that is
+the admission price ([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)).
+Floor changes go through `terraform/bootstrap/`; GCP-side resources go
+through `terraform/gcp/` and CI; workloads above the floor are applied by
+hand for now. If a layer earns management, that is a new decision with a
+new ADR.

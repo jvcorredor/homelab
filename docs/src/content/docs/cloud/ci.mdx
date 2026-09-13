@@ -1,0 +1,52 @@
+---
+title: CI apply path
+description: How a change reaches GCP — plan on the PR, a human-gated apply on merge, and where the WIF boundary actually bites.
+---
+
+import Diagram from "../../../components/Diagram.astro";
+import cicd from "../../../assets/diagrams/06-ci-apply.svg";
+
+Only `terraform/gcp/` has a CI apply. The `bootstrap` root is applied
+from a workstation because its providers need the LAN-only cluster; the
+Talos config has no automation at all.
+
+<Diagram
+  src={cicd}
+  wide
+  alt="Sequence diagram: the operator opens a PR; GitHub plans as the viewer-only service account via repository-scoped WIF and posts the plan; the operator merges; the apply job waits for approval in the gcp environment; the operator approves; GitHub applies as the owner service account via environment-scoped WIF."
+  caption="The CI apply path — plan widens nothing, the environment gates the apply."
+/>
+
+## The workflows
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| [`terraform-plan.yml`](https://github.com/jvcorredor/homelab/blob/main/.github/workflows/terraform-plan.yml) | PRs touching `terraform/**` | `tofu fmt -check`, `validate`, and a plan for each affected root; posts the plan as a sticky PR comment |
+| [`terraform-apply.yml`](https://github.com/jvcorredor/homelab/blob/main/.github/workflows/terraform-apply.yml) | Merge to `main` touching `terraform/gcp/**`, or manual dispatch | Plans with the viewer identity, then holds the apply behind the `gcp` environment |
+| [`secrets-scan.yml`](https://github.com/jvcorredor/homelab/blob/main/.github/workflows/secrets-scan.yml) | Every PR | gitleaks over the commits the PR adds |
+| [`docs-lint.yml`](https://github.com/jvcorredor/homelab/blob/main/.github/workflows/docs-lint.yml) | PRs touching markdown or the checker | `just check-docs` — every relative link in the live docs resolves |
+
+## Why the apply is safe to automate
+
+The design comes from
+[ADR-0004](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0004-ci-driven-terraform-apply.md):
+
+- **No long-lived keys.** GitHub Actions authenticates through Workload
+  Identity Federation. A job's OIDC token is exchanged for short-lived
+  credentials, scoped by claim.
+- **Plan and apply are different identities.** The plan job uses
+  `tf-ci-plan` (read-only). The apply job re-authenticates as
+  `tf-ci-apply` (`roles/owner`).
+- **The environment is the gate.** `tf-ci-apply` can only be
+  impersonated by tokens carrying `attribute.environment: gcp` — which
+  means the job declares `environment: gcp`, which means GitHub pauses it
+  for the required reviewer. A job that skips the environment cannot mint
+  the credentials even if it bypasses the plan job.
+- **The plan is an artifact.** The apply job downloads the exact plan
+  file the plan job produced; what runs is byte-for-byte what was
+  reviewed, not a re-plan.
+
+Repository variables and secret used by the workflows
+(`GCP_WIF_PROVIDER`, `GCP_CI_SA`, `GCP_APPLY_SA`, `GCP_BILLING_ACCOUNT`)
+come from the root's outputs. Setting them is manual UI state, like the
+environment itself.

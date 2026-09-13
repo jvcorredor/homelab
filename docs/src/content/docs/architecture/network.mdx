@@ -1,0 +1,94 @@
+---
+title: Network and nodes
+description: The cluster's addresses, the LB pool, and how a LoadBalancer service answers on the LAN.
+---
+
+import Diagram from "../../../components/Diagram.astro";
+import deployment from "../../../assets/diagrams/03-deployment.svg";
+import lbTraffic from "../../../assets/diagrams/05-loadbalancer-flow.svg";
+
+The lab sits on one flat LAN, `192.168.1.0/24`, behind an Optimum
+Gateway 6E. The gateway hands out DHCP only in the lower half of the
+subnet; everything cluster-related is statically addressed above it.
+
+<Diagram
+  src={deployment}
+  wide
+  alt="Deployment diagram: on the home LAN, the Optimum gateway and the operator workstation sit alongside three control-plane nodes (cp-01 to cp-03) and three workers (worker-01 to worker-03), each running Talos and Cilium."
+  caption="Deployment view — the six nodes, their roles, and their addresses. Scroll horizontally, or click to open full size."
+/>
+
+## Node inventory
+
+| Node | Role | Address | Notes |
+|------|------|---------|-------|
+| `cp-01` | Control plane | `192.168.1.245` | carries the shared VIP |
+| `cp-02` | Control plane | `192.168.1.246` | carries the shared VIP |
+| `cp-03` | Control plane | `192.168.1.247` | carries the shared VIP |
+| `worker-01` | Worker | `192.168.1.241` | |
+| `worker-02` | Worker | `192.168.1.242` | |
+| `worker-03` | Worker | `192.168.1.243` | |
+
+The Kubernetes API answers on the shared control-plane VIP,
+`https://192.168.1.240:6443` — any of the three control planes can serve
+it. Every node also exposes the API locally on `localhost:7445`
+(KubePrism), so pods do not depend on the VIP being reachable.
+
+Per-node configuration is version-controlled under
+[`talos/patches/nodes/`](https://github.com/jvcorredor/homelab/tree/main/talos/patches/nodes),
+with the canonical inventory in the
+[Talos runbook](https://github.com/jvcorredor/homelab/blob/main/talos/README.md).
+
+## Address plan
+
+| Range | Owner | Purpose |
+|-------|-------|---------|
+| `192.168.1.11` – `.199` | Optimum Gateway 6E | DHCP leases for everything that is not the cluster |
+| `192.168.1.200` – `.230` | Cilium | `CiliumLoadBalancerIPPool` — addresses handed to `Service`s of type `LoadBalancer` |
+| `.240` – `.247` | static | the control-plane VIP and the six nodes |
+
+The pool sits between the two other ranges on purpose: below it, DHCP
+cannot collide with a service address; above it, the static node range
+stays contiguous. The pool is defined in
+[`cilium.tf`](https://github.com/jvcorredor/homelab/blob/main/terraform/bootstrap/cilium.tf);
+its bounds are variables in
+[`variables.tf`](https://github.com/jvcorredor/homelab/blob/main/terraform/bootstrap/variables.tf).
+
+## How a LoadBalancer service gets an address
+
+There is no MetalLB and no separate load-balancer appliance. Cilium runs
+the whole path:
+
+<Diagram
+  src={lbTraffic}
+  wide
+  alt="Sequence diagram: the operator applies a LoadBalancer service; Cilium assigns an address from the pool and announces it via ARP from a worker; the gateway forwards traffic to that worker; Cilium delivers it to a backend pod."
+  caption="A LoadBalancer service — from apply to traffic."
+/>
+
+1. A `Service` of type `LoadBalancer` is applied.
+2. Cilium's LB IPAM assigns the next free address from the pool.
+3. A **worker** announces the address on the LAN via ARP. The
+   `CiliumL2AnnouncementPolicy` excludes control planes on purpose:
+   announcing from a control plane risks ARP flapping during a failover.
+4. Traffic for that address is delivered through the datapath to a
+   backend pod.
+
+Services can opt out of L2 announcement with the label
+`homelab.jackhall.dev/l2-announce: "false"` — Cilium still allocates an
+address, but no worker answers ARP for it, so it is unreachable from the
+LAN by construction. That is the supported way to park a pool address off
+the network.
+
+## Where the values live
+
+The address plan above is the one piece of this site that restates
+values, because a network page without addresses is useless. The owning
+files are:
+
+- **Node addresses and the VIP** —
+  [`talos/patches/nodes/*.yaml`](https://github.com/jvcorredor/homelab/tree/main/talos/patches/nodes)
+- **LB pool bounds** —
+  [`terraform/bootstrap/variables.tf`](https://github.com/jvcorredor/homelab/blob/main/terraform/bootstrap/variables.tf)
+- **L2 announcement scope** —
+  [`terraform/bootstrap/cilium.tf`](https://github.com/jvcorredor/homelab/blob/main/terraform/bootstrap/cilium.tf)

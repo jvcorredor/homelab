@@ -5,6 +5,12 @@ dist/
 # dependencies
 node_modules/
 
+# generated diagrams (scripts/build-diagrams.sh)
+src/assets/diagrams/
+
+# generated reference pages (docs/scripts/sync-repo-docs.mjs)
+src/content/docs/reference/
+
 # logs
 npm-debug.log*
 yarn-debug.log*
