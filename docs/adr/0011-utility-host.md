@@ -15,12 +15,9 @@ floor are added; it did not say where non-cluster workloads live.
 The operator installed Proxmox VE 9.2.x by hand on a dedicated machine
 at `pve.home.arpa` (`192.168.1.248`) to be that home: a hypervisor on
 the LAN, outside the Talos cluster, with no cloud resources behind it.
-KVM was validated end-to-end by booting a throwaway Debian 13 cloud VM
-before anything was committed to the host; that VM also established
-what "throwaway" means here — quick to create, quick to delete, never
-expected to survive. The host sits outside the cluster, so it does not
-re-open ADR-0009's floor decision, but it follows the same rule: it
-was installed by hand and it is understood.
+Sitting outside the cluster, it does not re-open ADR-0009's floor
+decision, but it follows the same rule: it was installed by hand and it
+is understood.
 
 The host was live but undocumented, which is the drift the barebones
 reset exists to prevent — a running system no one has agreed the rules
