@@ -15,6 +15,8 @@ It owns the structure; values live in their owning files, vocabulary in
   identity.
 - [`terraform/bootstrap/`](./terraform/bootstrap) — the cluster floor,
   applied from a workstation.
+- [`terraform/proxmox/`](./terraform/proxmox) — durable VMs on the
+  Proxmox utility host, applied from a workstation.
 - [`talos/`](./talos) — per-node machine-config patches and the bring-up
   runbook.
 - [`justfile`](./justfile) — `just smoke` runs a `cilium connectivity
