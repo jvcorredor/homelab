@@ -41,6 +41,9 @@ That partition still sits unused on each worker. Reclaiming it means
 wiping `EPHEMERAL` — XFS cannot shrink — so the space returns whenever a
 storage layer is rebuilt, not before.
 
+Every node runs a weekly filesystem trim of its mounted volumes
+([`talos/patches/cluster/filesystem-trim.yaml`](https://github.com/jvcorredor/homelab/blob/main/talos/patches/cluster/filesystem-trim.yaml)).
+
 ## What would change this
 
 If a workload ever needs a volume that survives its node, that is a new
