@@ -1,0 +1,13 @@
+# The Jellyfin pod mounts the media library as a hostPath volume
+# (/var/mnt/media on worker-01), which the cluster-wide PodSecurity
+# baseline default rejects. Same reason `local-path-storage` carries
+# the privileged labels (see the bootstrap root): hostPath access is
+# the admission-price feature here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jellyfin
+  labels:
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: privileged
