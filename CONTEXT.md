@@ -34,6 +34,14 @@ bucket, the `talos-cluster-secrets` GSM container, and the CI service
 accounts. Isolation is project-level so the homelab's blast radius is
 bounded.
 
+### Utility host (`pve.home.arpa`)
+
+The hand-installed Proxmox VE host at `pve.home.arpa`
+(`192.168.1.248`), outside the Talos cluster and not part of the
+ADR-0009 floor. Durable VMs are managed declaratively in Terraform
+([ADR-0011](./docs/adr/0011-utility-host.md)); throwaway VMs are made
+by hand (`qm`/UI) and never enter state.
+
 ## Cluster contents (the floor)
 
 The terms below name what runs on the cluster. For what is live, where

@@ -20,6 +20,7 @@ commit messages.
 | [0008](./0008-observability-as-self-hosted-stack.md) | Observability as a self-hosted stack | Superseded by [0009](./0009-barebones-reset.md) |
 | [0009](./0009-barebones-reset.md) | Barebones reset — back out everything above Talos + Cilium | Accepted — current frame |
 | [0010](./0010-docs-site-with-c4-diagrams.md) | Documentation site with C4 diagrams as a repo-layer artifact | Accepted — in force |
+| [0011](./0011-utility-host.md) | Utility host and declarative VM management | Accepted — in force |
 
 ## Format
 
