@@ -1,7 +1,8 @@
 # Rockingham Homelab
 
 Configuration for the Rockingham Homelab: a 6-node bare-metal Kubernetes
-cluster (`rockingham`) running Talos Linux.
+cluster (`rockingham`) running Talos Linux, plus a Proxmox utility host
+(`pve.home.arpa`) for non-cluster workloads.
 
 **Start here: [`ARCHITECTURE.md`](./ARCHITECTURE.md)** — what runs, where
 it is configured, how changes reach the cluster, and how to verify them.

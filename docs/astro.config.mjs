@@ -13,7 +13,7 @@ export default defineConfig({
     starlight({
       title: "Rockingham Homelab",
       description:
-        "How the Rockingham Homelab works: a six-node bare-metal Talos Kubernetes cluster.",
+        "How the Rockingham Homelab works: a six-node bare-metal Talos Kubernetes cluster and a Proxmox utility host.",
       social: [
         {
           icon: "github",

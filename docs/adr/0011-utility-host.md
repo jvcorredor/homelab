@@ -5,19 +5,20 @@
 
 ## Context
 
-The cluster is dedicated to `rockingham` and its floor is deliberately
-minimal ([ADR-0009](./0009-barebones-reset.md)). Not every workload
-belongs on it — a build host, a scratch VM for testing an OS or a
-service, a utility that wants to live on a persistent VM — and those
-workloads had no named home. The reset decided how layers above the
-floor are added; it did not say where non-cluster workloads live.
+The Rockingham Homelab has two compute components: the Talos Kubernetes
+cluster (`rockingham`) and a utility host. The cluster's floor is
+deliberately minimal ([ADR-0009](./0009-barebones-reset.md)), and not
+every workload belongs on it — a build host, a scratch VM for testing an
+OS or a service, a utility that wants to live on a persistent VM — and
+those workloads had no named home. The reset decided how layers above
+the floor are added; it did not say where non-cluster workloads live.
 
 The operator installed Proxmox VE 9.2.x by hand on a dedicated machine
-at `pve.home.arpa` (`192.168.1.248`) to be that home: a hypervisor on
-the LAN, outside the Talos cluster, with no cloud resources behind it.
-Sitting outside the cluster, it does not re-open ADR-0009's floor
-decision, but it follows the same rule: it was installed by hand and it
-is understood.
+at `pve.home.arpa` (`192.168.1.248`) to be that home: the homelab's
+second compute component, alongside the cluster but not part of it, on
+the LAN, with no cloud resources behind it. It does not re-open
+ADR-0009's floor decision, but it follows the same rule: it was
+installed by hand and it is understood.
 
 The host was live but undocumented, which is the drift the barebones
 reset exists to prevent — a running system no one has agreed the rules
@@ -30,9 +31,9 @@ VM.
 by hand, and its durable VMs are managed as code.** Concretely:
 
 1. **The host is manual.** Proxmox VE 9.2.x is installed and updated
-   by hand. It is not a Talos node, not part of the ADR-0009 floor,
-   and not managed by cloud Terraform — `terraform/gcp/` does not know
-   it exists.
+   by hand. It is a component of the Rockingham Homelab — not a Talos
+   node, not part of the cluster's ADR-0009 floor, and not managed by
+   cloud Terraform: `terraform/gcp/` does not know it exists.
 2. **Durable VMs are code.** A new `terraform/proxmox/` root owns VMs
    that should persist, using the `bpg/proxmox` provider. State lives
    in the existing `rockingham-homelab-tfstate` bucket under a
@@ -73,9 +74,9 @@ Deferred, on purpose:
 - Durable VMs are reproducible. Config and state are in the repo, so
   rebuilding a VM is `tofu apply` rather than a remembered sequence
   of UI clicks.
-- The cluster keeps its floor. Utility workloads have a home that is
-  not `rockingham`, so ADR-0009's admission process does not have to
-  stretch to cover them.
+- The cluster keeps its floor. Utility workloads have a home in the
+  homelab but outside the cluster, so ADR-0009's admission process does
+  not have to stretch to cover them.
 - Throwaways stay cheap: an experiment costs a `qm create` and a
   `qm destroy` — no state, no review, no cleanup debt.
 - The ID ranges make intent visible in the UI: 2xx means "declared,
@@ -109,8 +110,8 @@ Deferred, on purpose:
 
 ### Run the builder on the Talos cluster
 
-Rejected. The cluster is dedicated to `rockingham`, and the floor is
-deliberately minimal ([ADR-0009](./0009-barebones-reset.md)): a
+Rejected. The cluster's floor is deliberately minimal
+([ADR-0009](./0009-barebones-reset.md)): a
 builder would be a new always-on workload with registry credentials
 and a cache, added to a cluster the reset exists to keep explainable.
 If a builder ever belongs on the cluster, that reopens the floor

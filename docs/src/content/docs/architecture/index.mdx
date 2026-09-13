@@ -1,6 +1,6 @@
 ---
 title: The floor
-description: What runs on Rockingham after the barebones reset, why the modules are ordered the way they are, and how changes reach the cluster.
+description: What runs on the Kubernetes cluster after the barebones reset, why the modules are ordered the way they are, and how changes reach it.
 ---
 
 import Diagram from "../../../components/Diagram.astro";
@@ -8,13 +8,13 @@ import containers from "../../../assets/diagrams/02-containers.svg";
 
 Since the 2026-08-09 barebones reset
 ([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)),
-Rockingham runs a deliberately small set of components — the **floor**.
+The cluster runs a deliberately small set of components — the **floor**.
 Everything above it was removed and returns only by hand, one layer at a
 time, as a learning exercise.
 
 <Diagram
   src={containers}
-  alt="Container diagram: inside Rockingham, Cilium requires Gateway API CRDs at startup and runs as a DaemonSet on Talos; workloads claim volumes from local-path-provisioner and route through Cilium. The Optimum gateway exchanges traffic with Cilium."
+  alt="Container diagram: inside the cluster, Cilium requires Gateway API CRDs at startup and runs as a DaemonSet on Talos; workloads claim volumes from local-path-provisioner and route through Cilium. The Optimum gateway exchanges traffic with Cilium."
   caption="Level 2 — the floor inside the cluster."
 />
 

@@ -9,13 +9,13 @@
 // LBTraffic, CICD. View keys determine the exported file names, which
 // scripts/build-diagrams.sh maps onto stable asset names.
 
-workspace "Rockingham Homelab" "A six-node bare-metal Talos Kubernetes cluster, modelled in C4." {
+workspace "Rockingham Homelab" "The lab's Kubernetes cluster and its dependencies, modelled in C4." {
 
     model {
 
         operator = person "Operator" "Jack — owns the lab, operates every layer, and approves the CI deploy gate."
 
-        rockingham = softwareSystem "Rockingham" "Six-node bare-metal Kubernetes cluster running Talos Linux. The floor: Talos, Cilium, Gateway API CRDs, local-path-provisioner, metrics-server (ADR-0009)." {
+        rockingham = softwareSystem "Kubernetes cluster (rockingham)" "Six-node bare-metal Kubernetes cluster running Talos Linux. The floor: Talos, Cilium, Gateway API CRDs, local-path-provisioner, metrics-server (ADR-0009)." {
 
             talos = container "Talos Linux + Kubernetes" "Immutable node OS on all six nodes; runs the Kubernetes control plane, kubelet, and KubePrism." "Platform"
             cilium = container "Cilium" "The only data-plane component: CNI, kube-proxy replacement, LB IPAM + L2 announcements, Gateway API controller, Hubble. One Helm release (ADR-0002)." "Networking"

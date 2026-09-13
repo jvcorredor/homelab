@@ -15,10 +15,18 @@ decision was made, CONTEXT explains **what we call things**.
 
 ## Cluster and naming
 
+### Rockingham Homelab
+
+The home lab as a whole — the "datacenter" this repository manages. Two
+compute components: the Talos Kubernetes cluster (`rockingham`) and the
+utility host (`pve.home.arpa`). The cloud-side skeleton lives in the
+`rockingham-homelab` GCP project.
+
 ### `rockingham`
 
-The Talos Kubernetes cluster's name. Used as the cluster identity in Talos
-config, kubeconfig contexts. Not a hostname.
+The Talos Kubernetes cluster's name — one of the two compute components
+of the Rockingham Homelab (the other is the utility host). Used as the
+cluster identity in Talos config, kubeconfig contexts. Not a hostname.
 
 ### `jackhall.dev`
 
@@ -37,8 +45,9 @@ bounded.
 ### Utility host (`pve.home.arpa`)
 
 The hand-installed Proxmox VE host at `pve.home.arpa`
-(`192.168.1.248`), outside the Talos cluster and not part of the
-ADR-0009 floor. Durable VMs are managed declaratively in Terraform
+(`192.168.1.248`): the Rockingham Homelab's second compute component,
+outside the Talos cluster and not part of the ADR-0009 floor. Durable
+VMs are managed declaratively in Terraform
 ([ADR-0011](./docs/adr/0011-utility-host.md)); throwaway VMs are made
 by hand (`qm`/UI) and never enter state.
 
