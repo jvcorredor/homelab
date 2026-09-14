@@ -1,0 +1,149 @@
+#cloud-config
+# Vendor-data for buildkit-01, uploaded by terraform/proxmox as a PVE snippet.
+# Runs once at first boot: installs the pinned BuildKit release, generates the
+# mTLS material, and starts buildkitd. No secret is written here — the CA and
+# both key pairs are generated on the VM; only the client bundle is exported,
+# for a one-time scp.
+#
+# Bumping BUILDKIT_VERSION affects only a fresh boot: cloud-init does not
+# re-execute on a running guest, so edit the pin and either re-run
+# /usr/local/bin/provision-buildkit.sh on the VM or destroy and re-apply it.
+
+hostname: buildkit-01
+manage_etc_hosts: true
+
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - openssl
+
+write_files:
+  - path: /etc/buildkit/buildkitd.toml
+    owner: root:root
+    permissions: "0644"
+    content: |
+      root = "/var/lib/buildkit"
+
+      [grpc]
+        # LAN-facing on purpose: local clients and, later, ARC runners reach
+        # buildkitd directly over vmbr0. Mutual TLS (configured on the command
+        # line) is the access boundary, not network reachability.
+        address = ["tcp://0.0.0.0:1234"]
+
+  - path: /etc/systemd/system/buildkitd.service
+    owner: root:root
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=BuildKit builder daemon
+      Documentation=https://github.com/moby/buildkit
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=notify
+      Delegate=yes
+      KillMode=mixed
+      Restart=always
+      RestartSec=5
+      TimeoutSec=0
+      ExecStart=/usr/local/bin/buildkitd --config /etc/buildkit/buildkitd.toml --tlscacert /etc/buildkit/tls/ca.crt --tlscert /etc/buildkit/tls/server.crt --tlskey /etc/buildkit/tls/server.key
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /usr/local/bin/provision-buildkit.sh
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      BUILDKIT_VERSION="v0.33.0"
+      BUILDKIT_SHA256="b6242896d343100808dcbe37565caf381e0a444a6a83d7255926bb1519248ead"
+      BUILDKIT_URL="https://github.com/moby/buildkit/releases/download/${BUILDKIT_VERSION}/buildkit-${BUILDKIT_VERSION}.linux-amd64.tar.gz"
+      TLS_DIR="/etc/buildkit/tls"
+      CLIENT_DIR="/home/jack/buildkit-client"
+
+      install_dir="$(mktemp -d)"
+      trap 'rm -rf "${install_dir}"' EXIT
+
+      # 1. Binaries. The whole bin/ tree lands in /usr/local/bin: buildkitd
+      # looks for buildkit-runc and the qemu emulators beside itself, and the
+      # CNI plugins are there if the worker ever switches to CNI networking.
+      if ! /usr/local/bin/buildkitd --version >/dev/null 2>&1; then
+        curl -fsSL "${BUILDKIT_URL}" -o "${install_dir}/buildkit.tar.gz"
+        echo "${BUILDKIT_SHA256}  ${install_dir}/buildkit.tar.gz" | sha256sum -c -
+        tar -xzf "${install_dir}/buildkit.tar.gz" -C "${install_dir}" bin
+        install -m 0755 "${install_dir}"/bin/* /usr/local/bin/
+        ln -sf /usr/local/bin/buildkit-runc /usr/local/bin/runc
+      fi
+
+      # 2. TLS material, generated once. The CA key stays on the VM.
+      if [[ ! -f "${TLS_DIR}/client.crt" ]]; then
+        install -d -m 0755 "${TLS_DIR}"
+
+        openssl genrsa -out "${TLS_DIR}/ca.key" 4096
+        openssl req -x509 -new -key "${TLS_DIR}/ca.key" -sha256 -days 3650 \
+          -subj "/CN=buildkit-01 CA" -out "${TLS_DIR}/ca.crt"
+
+        openssl genrsa -out "${TLS_DIR}/server.key" 4096
+        openssl req -new -key "${TLS_DIR}/server.key" -subj "/CN=buildkit-01" \
+          -out "${TLS_DIR}/server.csr"
+        openssl x509 -req -in "${TLS_DIR}/server.csr" -CA "${TLS_DIR}/ca.crt" \
+          -CAkey "${TLS_DIR}/ca.key" -CAcreateserial -days 3650 -sha256 \
+          -extfile <(printf "subjectAltName=DNS:buildkit-01,IP:192.168.1.249") \
+          -out "${TLS_DIR}/server.crt"
+
+        openssl genrsa -out "${TLS_DIR}/client.key" 4096
+        openssl req -new -key "${TLS_DIR}/client.key" -subj "/CN=buildx" \
+          -out "${TLS_DIR}/client.csr"
+        openssl x509 -req -in "${TLS_DIR}/client.csr" -CA "${TLS_DIR}/ca.crt" \
+          -CAkey "${TLS_DIR}/ca.key" -CAcreateserial -days 3650 -sha256 \
+          -out "${TLS_DIR}/client.crt"
+
+        rm -f "${TLS_DIR}"/*.csr "${TLS_DIR}/ca.srl"
+        chmod 600 "${TLS_DIR}"/*.key
+        chmod 644 "${TLS_DIR}"/*.crt
+
+        install -d -m 0700 -o jack -g jack "${CLIENT_DIR}"
+        install -m 0600 -o jack -g jack \
+          "${TLS_DIR}/ca.crt" "${TLS_DIR}/client.crt" "${TLS_DIR}/client.key" \
+          "${CLIENT_DIR}/"
+
+        cat > "${CLIENT_DIR}/README.txt" <<'EOF'
+      BuildKit client bundle for buildkit-01 (192.168.1.249:1234).
+
+      Fetch once from a workstation on the LAN:
+
+        scp -r jack@192.168.1.249:/home/jack/buildkit-client ~/.config/buildkit/
+
+      Drive BuildKit directly:
+
+        buildctl --addr tcp://192.168.1.249:1234 \
+          --tlscacert ~/.config/buildkit/buildkit-client/ca.crt \
+          --tlscert ~/.config/buildkit/buildkit-client/client.crt \
+          --tlskey ~/.config/buildkit/buildkit-client/client.key \
+          debug workers
+
+      Or register it as a buildx builder:
+
+        docker buildx create --name buildkit-01 --driver remote \
+          --addr tcp://192.168.1.249:1234 \
+          --tlscacert ~/.config/buildkit/buildkit-client/ca.crt \
+          --tlscert ~/.config/buildkit/buildkit-client/client.crt \
+          --tlskey ~/.config/buildkit/buildkit-client/client.key
+
+      client.key is the credential: keep it 0600 and do not copy it around.
+      The bundle is generated once per VM; rebuilding buildkit-01 replaces it.
+      EOF
+        chown jack:jack "${CLIENT_DIR}/README.txt"
+      fi
+
+      # 3. Run it.
+      systemctl daemon-reload
+      systemctl enable --now buildkitd
+
+runcmd:
+  - [bash, /usr/local/bin/provision-buildkit.sh]

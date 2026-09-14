@@ -33,3 +33,9 @@ variable "template_vm_id" {
   type        = number
   default     = 200
 }
+
+variable "vm_ssh_public_key_path" {
+  description = "Operator SSH public key injected into durable VMs through cloud-init. Expanded with pathexpand because file() does not expand ~."
+  type        = string
+  default     = "~/.ssh/id_ed25519.pub"
+}
