@@ -1,6 +1,6 @@
 # ADR-0011: Utility host and declarative VM management
 
-- **Status:** Accepted
+- **Status:** Accepted (amended 2026-09-13 — `buildkit-01` earned; see the Amendment section)
 - **Date:** 2026-09-13
 
 ## Context
@@ -140,3 +140,30 @@ exist today, which is why no builder VM is being created now. But
 runners are CI: ephemeral, repo-scoped, and unable to host a durable
 LAN service or a scratch guest-OS test. Choosing "no host" answers
 the builder question and leaves the next utility-VM question homeless.
+
+## Amendment — 2026-09-13: `buildkit-01` earned
+
+The deferred builder was earned: local image builds want a shared cache
+and a daemon that outlives a laptop session, and the workload is a
+durable utility VM, not a cluster service. Per #253, `buildkit-01` is
+declared in `terraform/proxmox/` as a 4 vCPU · 8 GB · 64 GB clone of the
+template at `192.168.1.249`, provisioned by a cloud-init vendor-data
+snippet.
+
+Two properties worth recording, because they shape later clients:
+
+- **LAN-facing with mTLS.** `buildkitd` listens on `tcp://0.0.0.0:1234`;
+  mutual TLS is the access boundary, not network reachability. The
+  workstation is the client today; the future ARC runners reach the same
+  listener over `vmbr0` with no tunnel. Certs are generated on the VM at
+  first boot, so the CA key stays in the guest and no key enters git or
+  state. Rebuilding the VM rotates the CA, so the client bundle must be
+  fetched again.
+- **Provisioned from code.** The install script is a repo file passed as
+  vendor-data, and the BuildKit release is pinned and checksum-verified.
+  The script runs at first boot only, so a version bump is a re-run or a
+  re-apply, not a live config edit.
+
+The rest of this ADR is unchanged: apply remains workstation-local
+(rule 3), VM 201 is a durable 2xx resource (rule 5), and the GPU
+deferral stands.

@@ -7,8 +7,8 @@ The **Rockingham Homelab** has two compute components: the six-node
 Talos Kubernetes cluster (`rockingham`) and the **utility host**, a
 hand-installed Proxmox VE machine at `pve.home.arpa`. It is not a
 cluster node and not part of the [floor](../): it is where non-cluster
-workloads — a scratch VM for testing an OS, a durable service, a future
-builder — have a home
+workloads — a scratch VM for testing an OS, a durable service, a build
+server — have a home
 ([ADR-0011](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0011-utility-host.md)).
 It follows the cluster's admission rule: installed by hand, and
 understood.
@@ -74,14 +74,16 @@ One 500 GB NVMe, an EFI partition, and an LVM volume group `pve`:
 | `pve-data` | ≈338 GB LVM-thin | VM disks and cloud-init drives — the `local-lvm` datastore |
 
 `local` is a directory datastore on the root filesystem; it holds ISO
-images, including the Debian cloud image the template was built from.
-Every durable VM disk lives on `local-lvm`.
+images, including the Debian cloud image the template was built from, and
+the `buildkit-01` cloud-init snippet. Every durable VM disk lives on
+`local-lvm`.
 
 ## VMs
 
 | ID | Name | State | Spec | Owner |
 |----|------|-------|------|-------|
 | 200 | `debian-13-template` | stopped template | 2 vCPU · 2 GB RAM · 8 GB disk on `local-lvm` | [`terraform/proxmox/`](https://github.com/jvcorredor/homelab/tree/main/terraform/proxmox) |
+| 201 | `buildkit-01` | running | 4 vCPU · 8 GB RAM · 64 GB disk on `local-lvm` | [`terraform/proxmox/`](https://github.com/jvcorredor/homelab/tree/main/terraform/proxmox) |
 
 VM 200 is a Debian 13 (trixie) generic-cloud image: a template, never
 started, with no identity or fixed address of its own. Future durable
@@ -92,17 +94,22 @@ throwaway VMs use **9xx**, are made with `qm` or the UI, and are absent
 from this table by design — they exist to be destroyed
 ([ADR-0011](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0011-utility-host.md)).
 
+`buildkit-01` is the first tenant: it clones the template and runs
+BuildKit for LAN clients over mutual TLS. The client bundle, the pinned
+BuildKit release, and the provisioning story live in the
+[root's README](https://github.com/jvcorredor/homelab/blob/main/terraform/proxmox/README.md#buildkit-01).
+
 ## What is deferred
 
 - **VT-d / GPU passthrough.** Not configured: VT-d is not yet enabled
   on the host, so there are no IOMMU groups and guests are CPU-only.
   The RTX 3060 Ti waits on
   [#244](https://github.com/jvcorredor/homelab/issues/244).
-- **A builder VM (`buildkit-01`).** The first candidate durable tenant,
-  deliberately not built: a builder earns its place only when a build
-  workload needs it, and Docker builds stay on GitHub-hosted runners
-  until then
-  ([ADR-0011](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0011-utility-host.md)).
+
+The builder that this page once deferred was earned on 2026-09-13 and
+built as VM 201 (`buildkit-01`), recorded in
+[ADR-0011](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0011-utility-host.md)
+([#253](https://github.com/jvcorredor/homelab/issues/253)).
 
 ## Operations
 
