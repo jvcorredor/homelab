@@ -58,6 +58,7 @@ export default defineConfig({
           items: [
             { label: "Architecture map", slug: "reference/architecture-map" },
             { label: "Glossary", slug: "reference/glossary" },
+            { label: "Parity inventory", slug: "reference/parity-inventory" },
             { label: "Decision records", slug: "decisions" },
           ],
         },

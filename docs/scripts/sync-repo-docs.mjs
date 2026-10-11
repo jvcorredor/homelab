@@ -35,6 +35,13 @@ const pages = [
     description:
       "The canonical vocabulary used across the repository. Generated from CONTEXT.md at build time.",
   },
+  {
+    source: "PARITY.md",
+    target: "parity-inventory.md",
+    title: "Parity inventory",
+    description:
+      "What an instance of the platform can rely on, where rockingham and GKE differ, and the decision for each difference. Generated from PARITY.md at build time.",
+  },
 ];
 
 function rewriteLinks(markdown) {
