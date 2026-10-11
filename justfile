@@ -13,6 +13,12 @@ smoke: smoke-cilium
 # existing namespace as-is. Names track cilium-cli's convention for the
 # default `--test-concurrency 1`.
 #
+# Because this recipe created the namespaces, nothing else will remove them
+# (cilium-cli leaves pre-existing namespaces alone), so an EXIT trap deletes
+# them whether the test passes, fails, or is interrupted. The trap keeps the
+# test's exit status, and the delete waits so an immediate re-run does not
+# land on a `Terminating` namespace.
+#
 # Two checks are excluded as unreliable on this homelab, so `just smoke`
 # stays a clean pass/fail gate:
 #   - no-unexpected-packet-drops trips on ambient VLAN-tagged LAN traffic
@@ -22,7 +28,13 @@ smoke: smoke-cilium
 smoke-cilium:
     #!/usr/bin/env bash
     set -euo pipefail
-    for ns in cilium-test-1 cilium-test-ccnp1 cilium-test-ccnp2; do
+    namespaces=(cilium-test-1 cilium-test-ccnp1 cilium-test-ccnp2)
+    cleanup() {
+      kubectl delete namespace "${namespaces[@]}" --ignore-not-found \
+        || echo "warning: could not delete ${namespaces[*]}" >&2
+    }
+    trap cleanup EXIT
+    for ns in "${namespaces[@]}"; do
       kubectl create namespace "$ns" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
       kubectl label namespace "$ns" --overwrite \
         pod-security.kubernetes.io/enforce=privileged \
