@@ -28,6 +28,7 @@ turned out to be wrong.
 | [0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md) | Barebones reset — back out everything above Talos + Cilium | Accepted — current frame |
 | [0010](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0010-docs-site-with-c4-diagrams.md) | Documentation site with C4 diagrams as a repo-layer artifact | Accepted — in force |
 | [0011](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0011-utility-host.md) | Utility host and declarative VM management | Accepted — in force (amended 2026-09-13: `buildkit-01` built) |
+| [0012](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0012-platform-dev-and-incubation-purpose.md) | Platform dev and incubation first — retire the by-hand admission rule | Proposed — would supersede the frame and admission rule of [0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md) |
 
 ## Reading the superseded ones
 
