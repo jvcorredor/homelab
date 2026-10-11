@@ -13,6 +13,7 @@ on:
       - 'scripts/build-diagrams.sh'
       - 'ARCHITECTURE.md'
       - 'CONTEXT.md'
+      - 'PARITY.md'
       - '.github/workflows/deploy-docs.yml'
   push:
     branches: [main]
@@ -21,6 +22,7 @@ on:
       - 'scripts/build-diagrams.sh'
       - 'ARCHITECTURE.md'
       - 'CONTEXT.md'
+      - 'PARITY.md'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 

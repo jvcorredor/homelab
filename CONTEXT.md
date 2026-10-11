@@ -118,3 +118,11 @@ unused.
 system: what is running, where each piece is configured, how changes
 reach the cluster, what a human must do by hand, and how to verify. It
 states structure, never values; values live in the file that owns them.
+
+### Parity inventory
+
+[`PARITY.md`](./PARITY.md) — the row-by-row record of what `rockingham`
+and the production GKE cluster each provide, with one decision per
+difference: a **bridge** (a layer installed on `rockingham` that passes
+the ADR-0012 admission test), an **accepted difference**, or **contract
+adapts**. Until issue #258 closes it also carries the plan to finish it.

@@ -17,7 +17,7 @@ cd "$repo_root"
 
 files=("$@")
 if [[ ${#files[@]} -eq 0 ]]; then
-  files=(ARCHITECTURE.md CONTEXT.md)
+  files=(ARCHITECTURE.md CONTEXT.md PARITY.md)
 fi
 
 status=0

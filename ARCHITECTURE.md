@@ -123,6 +123,7 @@ configures it. Where it goes:
 |--------------|------|
 | Vocabulary and naming | [`CONTEXT.md`](./CONTEXT.md) |
 | Decisions and their history | [`docs/adr/`](./docs/adr/README.md) |
+| Homelab-to-GKE parity decisions, per primitive | [`PARITY.md`](./PARITY.md) |
 | Values — addresses, ranges, versions, pins | The `.tf`, patch, or workflow that uses them |
 | Procedures and runbooks | [`terraform/*/README.md`](./terraform), [`talos/README.md`](./talos/README.md) |
 | Structure and cross-cutting rules | This file |
