@@ -140,3 +140,14 @@ blocks.
 Rejected. Admission is where the two conflict, and a conflict needs a
 tie-breaker. The platform wins it, because a concrete consumer is what
 the May layers lacked. Learning stays a benefit.
+
+## Amendment — 2026-10-11: repository names
+
+`RaptGroup/platform` was split after this ADR was accepted. The Go
+library is now `RaptGroup/rapt`, and hosting (the clusters, database
+servers, tunnels, DNS, and state that products run on) lives in
+`RaptGroup/infra`. Wherever this ADR says `RaptGroup/platform`, or "the
+platform" in the hosting sense, read `RaptGroup/infra`.
+`RaptGroup/platform#1` (developer experience and ephemeral environments)
+is now `RaptGroup/infra#2`. This amendment corrects names only; the
+decision and the admission test are unchanged.
