@@ -18,10 +18,10 @@ commit messages.
 | [0006](./0006-public-preview-environments-via-cloudflare-tunnel.md) | Public preview environments via Cloudflare Tunnel | Superseded by [0009](./0009-barebones-reset.md) |
 | [0007](./0007-eso-bootstrap-auth-via-cluster-wif.md) | External Secrets bootstrap auth via cluster WIF | Superseded by [0009](./0009-barebones-reset.md) |
 | [0008](./0008-observability-as-self-hosted-stack.md) | Observability as a self-hosted stack | Superseded by [0009](./0009-barebones-reset.md) |
-| [0009](./0009-barebones-reset.md) | Barebones reset — back out everything above Talos + Cilium | Accepted — current frame |
+| [0009](./0009-barebones-reset.md) | Barebones reset — back out everything above Talos + Cilium | Accepted; floor and removals in force, frame and by-hand admission rule superseded by [0012](./0012-platform-dev-and-incubation-purpose.md) |
 | [0010](./0010-docs-site-with-c4-diagrams.md) | Documentation site with C4 diagrams as a repo-layer artifact | Accepted — in force |
 | [0011](./0011-utility-host.md) | Utility host and declarative VM management | Accepted — in force (amended 2026-09-13: `buildkit-01` built) |
-| [0012](./0012-platform-dev-and-incubation-purpose.md) | Platform dev and incubation first — retire the by-hand admission rule | Proposed — would supersede the frame and admission rule of [0009](./0009-barebones-reset.md) |
+| [0012](./0012-platform-dev-and-incubation-purpose.md) | Platform dev and incubation first — retire the by-hand admission rule | Accepted — current frame; supersedes the frame and admission rule of [0009](./0009-barebones-reset.md) |
 
 ## Format
 

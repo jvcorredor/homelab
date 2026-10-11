@@ -10,8 +10,8 @@ cluster node and not part of the [floor](../): it is where non-cluster
 workloads — a scratch VM for testing an OS, a durable service, a build
 server — have a home
 ([ADR-0011](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0011-utility-host.md)).
-It follows the cluster's admission rule: installed by hand, and
-understood.
+The host itself is installed and patched by hand; its durable VMs are
+declared in Terraform.
 
 ## Hardware
 

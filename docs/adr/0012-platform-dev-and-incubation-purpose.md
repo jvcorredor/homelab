@@ -1,6 +1,6 @@
 # ADR-0012: Platform dev and incubation first — retire the by-hand admission rule
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-11
 
 ## Context
@@ -50,22 +50,21 @@ criterion for what runs on it.** Concretely:
    a layer by hand. How a layer above the floor is delivered (`kubectl`,
    `helm`, Terraform, or a returning Argo CD) is not decided here; each
    layer's own decision picks its lane.
-3. **Admission test.** A layer above the floor is admitted when it
-   passes the following test, which replaces ADR-0009's "pick it,
-   install it, explain it by hand":
+3. **Admission test.** A layer above the floor is admitted when all
+   three hold. This replaces ADR-0009's "pick it, install it, explain it
+   by hand":
 
-   > **TODO (operator):** write the test here, 5–10 lines. It has to
-   > answer the three causes named in Context: no owner, no consumer, no
-   > health signal. Candidate from #259: a named consumer (a platform
-   > issue or ADR), declared in git, and a health signal someone will
-   > see. Settle three things:
-   >
-   > - Is the consumer a hard gate, or a judgment call at review?
-   > - What counts as a health signal while no observability stack runs
-   >   (ADR-0008 was removed)? A `just smoke`-style check, a documented
-   >   probe, or an alert once one exists.
-   > - What removes a layer whose consumer goes away? ADR-0009's "no
-   >   real traffic in 90 days" suggests a review trigger.
+   - **Consumer.** An open platform issue or an accepted ADR names the
+     workload that depends on it. "Might be useful" does not count.
+     Checked at PR review.
+   - **Declared.** Its install and config are in git, and
+     `ARCHITECTURE.md` maps it to the file that configures it.
+   - **Health signal.** Something fails visibly when it breaks: an alert
+     once observability exists; until then a probe in `just smoke` or a
+     documented command in the layer's README.
+
+   A layer whose consumer is gone, or that shows no use for 90 days,
+   gets an issue proposing its removal.
 
 4. **The floor stays as a name, not a ceiling.** "The floor" remains the
    name for what `terraform/bootstrap/` installs on top of Talos and

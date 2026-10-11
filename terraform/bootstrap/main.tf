@@ -6,10 +6,10 @@
 #   local-path.tf        — step 3: local-path-provisioner (default StorageClass)
 #   metrics-server.tf    — step 4: metrics-server (kubectl top)
 #
-# This is the barebones floor: Talos + Cilium + local-path + metrics-server,
-# nothing else. ArgoCD, ESO, cert-manager, and every app they managed were
-# backed out in the 2026-08 teardown (see docs/adr/); anything above this
-# floor is re-added deliberately, by hand, as a learning exercise.
+# This is the floor: Talos + Cilium + local-path + metrics-server, nothing
+# else. ArgoCD, ESO, cert-manager, and every app they managed were backed
+# out in the 2026-08 teardown (see docs/adr/); anything above this floor
+# is admitted only through the test in ADR-0012.
 #
 # Ordering between steps is enforced via `depends_on` on the Helm releases
 # and `kubectl_manifest` resources in those files. main.tf is intentionally

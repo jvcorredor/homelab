@@ -9,8 +9,9 @@ import containers from "../../../assets/diagrams/02-containers.svg";
 Since the 2026-08-09 barebones reset
 ([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)),
 The cluster runs a deliberately small set of components — the **floor**.
-Everything above it was removed and returns only by hand, one layer at a
-time, as a learning exercise.
+Everything above it was removed and returns one layer at a time, through
+the admission test in
+[ADR-0012](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0012-platform-dev-and-incubation-purpose.md).
 
 <Diagram
   src={containers}
@@ -53,7 +54,7 @@ The full operating detail, including the upgrade policy, is in the
 | `terraform/gcp/` | PR plan; merge to `main` triggers apply | `gcp` GitHub environment: branch-restricted, required reviewer ([ADR-0004](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0004-ci-driven-terraform-apply.md)) |
 | `terraform/bootstrap/` | `tofu apply` from a workstation holding the kubeconfig | none — no CI apply for this root |
 | Talos machine config | `talosctl` per node, per the [runbook](https://github.com/jvcorredor/homelab/blob/main/talos/README.md) | none |
-| Anything above the floor | applied by hand (`kubectl`, `helm`) | the admission rule below |
+| Anything above the floor | `kubectl` or `helm` from a workstation, unless the layer's own decision picks another lane | the admission test below ([ADR-0012](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0012-platform-dev-and-incubation-purpose.md)) |
 
 The apply gate is a human approval at run time, not just review at PR
 time: the apply job sits behind the `gcp` deployment environment.
@@ -76,9 +77,11 @@ Steps with no code path, which no CI check will catch:
 
 ## Adding a layer
 
-Pick it by hand, install it by hand, and be able to explain it — that is
-the admission price ([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)).
+An agent may install, upgrade, and operate a layer directly. A layer
+above the floor is admitted when it has a named consumer, is declared in
+git, and has a health signal — the admission test in
+[ADR-0012](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0012-platform-dev-and-incubation-purpose.md).
 Floor changes go through `terraform/bootstrap/`; GCP-side resources go
-through `terraform/gcp/` and CI; workloads above the floor are applied by
-hand for now. If a layer earns management, that is a new decision with a
-new ADR.
+through `terraform/gcp/` and CI; workloads above the floor use `kubectl`
+or `helm` from a workstation for now. A layer that earns management (a
+returning Argo CD, say) gets its own decision and ADR.

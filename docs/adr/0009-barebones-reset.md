@@ -1,6 +1,6 @@
 # ADR-0009: Barebones reset — back out everything above Talos + Cilium
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-10-11 — the pedagogical frame and the by-hand admission rule are superseded by [ADR-0012](./0012-platform-dev-and-incubation-purpose.md). The floor, the removals, and the rejected alternatives stand.
 - **Date:** 2026-08-09
 
 ## Context

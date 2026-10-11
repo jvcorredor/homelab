@@ -9,10 +9,11 @@ import context from "../../assets/diagrams/01-system-context.svg";
 **The Rockingham Homelab** is the home lab this repository manages. It
 has two compute components: a six-node bare-metal Kubernetes cluster
 (`rockingham` — three control planes and three workers, running Talos
-Linux) and a utility host (`pve.home.arpa`, running Proxmox VE). It
-exists to be understood — the operator can explain every layer running
-in it, and anything built on top is installed by hand first
-([ADR-0009](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0009-barebones-reset.md)).
+Linux) and a utility host (`pve.home.arpa`, running Proxmox VE). It is
+the dev and incubation environment for the RaptGroup platform, and
+learning is a benefit of running it. A layer runs on the cluster only if
+it has a named consumer, is declared in git, and has a health signal
+([ADR-0012](https://github.com/jvcorredor/homelab/blob/main/docs/adr/0012-platform-dev-and-incubation-purpose.md)).
 
 <Diagram
   src={context}
