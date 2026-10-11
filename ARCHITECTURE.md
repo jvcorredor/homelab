@@ -60,7 +60,7 @@ describes the present.
 | `terraform/gcp/` | [PR plan](./.github/workflows/terraform-plan.yml); merge to `main` triggers [apply](./.github/workflows/terraform-apply.yml) | `gcp` GitHub environment: branch-restricted, required reviewer ([ADR-0004](./docs/adr/0004-ci-driven-terraform-apply.md)) |
 | `terraform/bootstrap/` | `tofu apply` from a workstation holding the Talos-issued kubeconfig | none — no CI apply for this root |
 | Talos machine config | `talosctl` per node, per the [runbook](./talos/README.md) | none |
-| Anything above the floor | applied by hand (`kubectl`, `helm`) | the admission rule below |
+| Anything above the floor | `kubectl` or `helm` from a workstation, unless the layer's own decision picks another lane | the admission test below ([ADR-0012](./docs/adr/0012-platform-dev-and-incubation-purpose.md)) |
 
 The apply gate is a human approval at run time, not just review at PR
 time: the apply job sits behind the `gcp` deployment environment.
@@ -101,17 +101,21 @@ any bootstrap change as required.
 
 ## Adding a layer
 
-Pick it by hand, install it by hand, and be able to explain it — that is
-the admission price ([ADR-0009](./docs/adr/0009-barebones-reset.md)).
-Where it goes:
+An agent may install, upgrade, and operate a layer directly. A layer
+above the floor is admitted when it has a named consumer, is declared in
+git, and has a health signal — the admission test in
+[ADR-0012](./docs/adr/0012-platform-dev-and-incubation-purpose.md).
+Admitting one includes mapping it under "What is live" to the file that
+configures it. Where it goes:
 
 - **Floor changes** (a bootstrap component, a Cilium bump) — edit
   [`terraform/bootstrap/`](./terraform/bootstrap/README.md), applied from
   a workstation. Cilium upgrades one minor at a time.
 - **GCP-side resources** — [`terraform/gcp/`](./terraform/gcp/README.md);
   changes reach GCP through CI apply.
-- **Workloads above the floor** — applied by hand for now. If a layer
-  earns management, that is a new decision with a new ADR.
+- **Workloads above the floor** — `kubectl` or `helm` from a workstation
+  for now. A layer that earns management (a returning Argo CD, say)
+  gets its own decision and ADR.
 
 ## Where facts live
 

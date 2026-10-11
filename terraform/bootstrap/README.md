@@ -1,12 +1,13 @@
 # terraform/bootstrap
 
 Brings the Talos cluster from "kubeconfig works, nothing installed" to the
-barebones floor in a single `tofu apply`.
+floor in a single `tofu apply`.
 
 The floor (post-2026-08 reset, ADR-0009): Gateway API CRDs → Cilium →
-local-path-provisioner → metrics-server. There is deliberately **no**
+local-path-provisioner → metrics-server. There is currently **no**
 app-management layer here — no ArgoCD, no cert-manager, no ESO. Workloads
-above the floor are applied by hand.
+above the floor are not managed from this root; they are admitted under
+ADR-0012.
 
 Applied locally from the operator's workstation; there is no CI apply for
 this root (ADR-0004 covers `terraform/gcp/` only).

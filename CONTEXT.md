@@ -11,6 +11,8 @@ decision was made, CONTEXT explains **what we call things**.
 > ArgoCD, cert-manager, ESO, Longhorn, Harbor, ARC, the Cloudflare preview
 > surface, observability, split-horizon DNS — was backed out. The removed
 > vocabulary lives in the superseded ADRs and git history, not here.
+> The homelab is now the RaptGroup platform's dev and incubation
+> cluster, and layers return through the admission test in ADR-0012.
 > Entries below are the live state.
 
 ## Cluster and naming
